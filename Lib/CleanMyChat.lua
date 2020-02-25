@@ -15,6 +15,7 @@ CleanMyChat = {
     defaults = {
         cleanCyrillic = true,
         cleanGerman = false,
+        cleanFrench = false,
         cleanCustom = false,
         customFilter = {}
     },
@@ -24,40 +25,47 @@ local alphabet = {
     cyrillic = {
         "Б", "б", "Г", "г", "Д", "д", "Ж", "ж", "З", "з", "И", "и", "Й", "й", "К", "к", "Л", "л", "Н", "н", "П",
         "п", "У", "Ф", "ф", "Ц", "ц", "Ч", "ч", "Ш", "ш", "Щ", "щ", "Ъ", "ъ", "Ы", "ы", "Э", "э", "Ю", "ю", "Я",
-        "я", "Ђ", "ђ", "Ѓ", "ѓ", "Є", "є", "Љ", "љ", "Њ", "њ", "Ћ", "ћ", "Ќ", "ќ", "Ѝ", "ѝ", "Ў", "ў", "Џ", "џ"
+        "я", -- "Ђ", "ђ", "Ѓ", "ѓ", "Є", "є", "Љ", "љ", "Њ", "њ", "Ћ", "ћ", "Ќ", "ќ", "Ѝ", "ѝ", "Ў", "ў", "Џ", "џ"
     },
     german = {
         "ä", "ö", "ü"
+    },
+    french = {
+        "é", "à", "ê", "â", "î"
     }
 }
 
 local LAM = LibAddonMenu2
 
+local function Test(message, table)
+    for _, letter in ipairs(table) do
+        if string.find(string.lower(message), string.lower(letter)) then return true end
+    end
+    return false
+end
+
 --- Test if message contains letters known to be common in cyrillic languages
 -- @param message text to be filtered
 function CleanMyChat.IsCyrillic(message)
-    for _, letter in ipairs(alphabet.cyrillic) do
-        if string.find(message, letter) then return true end
-    end
-    return false
+    return Test(message, alphabet.cyrillic)
 end
 
 --- Test if message contains letters known to be common in German
 -- @param message text to be filtered
 function CleanMyChat.IsGerman(message)
-    for _, letter in ipairs(alphabet.german) do
-        if string.find(message, letter) then return true end
-    end
-    return false
+    return Test(message, alphabet.german)
+end
+
+--- Test if message contains letters known to be common in French
+-- @param message text to be filtered
+function CleanMyChat.IsFrench(message)
+    return Test(message, alphabet.french)
 end
 
 --- Test if message contains letters previous defined in the custom filter
 -- @param message text to be filtered
 function CleanMyChat:IsCustom(message)
-    for _, letter in ipairs(self.saved.customFilter) do
-        if string.find(message, letter) then return true end
-    end
-    return false
+    return Test(message, self.saved.customFilter)
 end
 
 --- Register filter for chat event
@@ -67,25 +75,31 @@ function CleanMyChat:RegisterEvent()
         local message = tostring(select(2, ...))
         local displayName = tostring(select(4, ...))
 
-        local removeGermanMessage = self.saved.cleanGerman and self.IsGerman(message)
         local removeCyrillicMessage = self.saved.cleanCyrillic and self.IsCyrillic(message)
+        local removeGermanMessage = self.saved.cleanGerman and self.IsGerman(message)
+        local removeFrenchMessage = self.saved.cleanFrench and self.IsFrench(message)
         local removeCustomMessage = self.saved.cleanCustom and self:IsCustom(message)
-        local removeMessage = removeGermanMessage or removeCyrillicMessage or removeCustomMessage
+        local removeMessage = removeFrenchMessage or removeGermanMessage or removeCyrillicMessage or removeCustomMessage
 
         -- Don't filter your own message
         if removeMessage and (GetUnitName("player") == fromName or GetDisplayName() == displayName) then
             if removeGermanMessage then
-                CHAT_SYSTEM:AddMessage("You just wrote with filtered German characters."
+                CHAT_SYSTEM:AddMessage("You just wrote with filtered German characters.\n"
                         .. "You might not see responses.\n"
                         .."Maybe you want to unset the filter of the language you just used...\n"
                         .. "Write /cmc to open the settings menu.")
             elseif removeCyrillicMessage then
-                CHAT_SYSTEM:AddMessage("You just wrote with filtered cyrillic characters."
+                CHAT_SYSTEM:AddMessage("You just wrote with filtered cyrillic characters.\n"
+                        .. "You might not see responses.\n"
+                        .."Maybe you want to unset the filter of the language you just used...\n"
+                        .. "Write /cmc to open the settings menu.")
+            elseif removeFrenchMessage then
+                CHAT_SYSTEM:AddMessage("You just wrote with filtered French characters.\n"
                         .. "You might not see responses.\n"
                         .."Maybe you want to unset the filter of the language you just used...\n"
                         .. "Write /cmc to open the settings menu.")
             else
-                CHAT_SYSTEM:AddMessage("You just wrote with filtered custom characters."
+                CHAT_SYSTEM:AddMessage("You just wrote with filtered custom characters.\n"
                         .. "You might not see responses.\n"
                         .."Maybe you want to unset the filter of the language you just used...\n"
                         .. "Write /cmc to open the settings menu.")
@@ -136,14 +150,23 @@ function CleanMyChat:RegisterSettings()
             {
                 type = "checkbox",
                 name = "Clean Cyrillic",
+                tooltip = table.concat(alphabet.cyrillic, ", "),
                 getFunc = function() return self.saved.cleanCyrillic end,
                 setFunc = function(value) self.saved.cleanCyrillic = value end
             },
             {
                 type = "checkbox",
                 name = "Clean German",
+                tooltip = table.concat(alphabet.german, ", "),
                 getFunc = function() return self.saved.cleanGerman end,
                 setFunc = function(value) self.saved.cleanGerman = value end
+            },
+            {
+                type = "checkbox",
+                name = "Clean French",
+                tooltip = table.concat(alphabet.french, ", "),
+                getFunc = function() return self.saved.cleanFrench end,
+                setFunc = function(value) self.saved.cleanFrench = value end
             },
             {
                 type = "checkbox",
@@ -162,12 +185,10 @@ function CleanMyChat:RegisterSettings()
                     self.saved.customFilter = {}
                     local filter = string.gsub(value, "[ ,;\n\t]+", " ")
                     for i in string.gmatch(filter, "%S+") do
-                        d(i)
                         if i ~= "" then
                             table.insert(self.saved.customFilter, i)
                         end
                     end
-                    d(self.saved.customFilter)
                 end
             }
         }
@@ -222,6 +243,9 @@ function CleanMyChat:RegisterCommands()
             elseif command == "german" then
                 self.saved.cleanGerman = not self.saved.cleanGerman
                 CHAT_SYSTEM:AddMessage("German filter:\t" .. self.saved.cleanGerman)
+            elseif command == "french" then
+                self.saved.cleanFrench = not self.saved.cleanFrench
+                CHAT_SYSTEM:AddMessage("German filter:\t" .. self.saved.cleanGerman)
             elseif command == "custom" then
                 self.saved.cleanCustom = not self.saved.cleanCustom
                 CHAT_SYSTEM:AddMessage("Custom filter:\t" .. self.saved.cleanCustom)
@@ -236,6 +260,7 @@ function CleanMyChat:Initialize()
     self:RegisterSettings()
     self:RegisterEvent()
     self:RegisterCommands()
+    return self
 end
 
 --Register Loaded Callback

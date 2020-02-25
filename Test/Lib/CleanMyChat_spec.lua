@@ -37,5 +37,47 @@ describe("CleanMyChat", function()
             assert.falsy(tResult)
         end)
     end)
+    describe("French", function()
+        it("should filter return true if text is only french letters", function()
+            local tMessage = "éàêâî"
+            local tResult = CleanMyChat.IsFrench(tMessage)
+            assert.truthy(tResult)
+        end)
+        it("should filter return true if text contains french letters", function()
+            local tMessage = "Bonjour, pouvez-vous vous arrêter?"
+            local tResult = CleanMyChat.IsFrench(tMessage)
+            assert.truthy(tResult)
+        end)
+        it("should filter return false if text contains no french letters", function()
+            local tMessage = "Hellö, is anybody here?"
+            local tResult = CleanMyChat.IsFrench(tMessage)
+            assert.falsy(tResult)
+        end)
+    end)
+    insulate("Custom", function()
+        local tFilter = "test"
+        local tFilterSentence = "This is a test"
+        local CMC
+        setup(function()
+            CMC = CleanMyChat:Initialize()
+        end)
+        it("should set custom filter", function()
+            CMC.saved.customFilter = { tFilter }
+            assert.same(CMC.saved.customFilter, { tFilter })
+        end)
+        it("should filter return true if text is only french letters", function()
+            local tResult = CMC:IsCustom(tFilter)
+            assert.truthy(tResult)
+        end)
+        it("should filter return true if text contains french letters", function()
+            local tResult = CMC:IsCustom(tFilterSentence)
+            assert.truthy(tResult)
+        end)
+        it("should filter return false if text contains no french letters", function()
+            local tMessage = "Hellö, is anybody here?"
+            local tResult = CMC:IsCustom(tMessage)
+            assert.falsy(tResult)
+        end)
+    end)
 
 end)
