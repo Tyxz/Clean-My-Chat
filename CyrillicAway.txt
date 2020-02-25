@@ -1,7 +1,0 @@
-## Title: CyrillicAway
-## Author: Tyx
-## Version: 1.0.0
-## APIVersion: 100030
-## Description: Filters out all messages containing cyrillic letters.
-
-Lib\CyrillicAway.lua
