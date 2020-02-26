@@ -44,6 +44,13 @@ CleanMyChat = {
             major = 1,
             minor = 1
         },
+        statistic = {
+            cyrillic = 0,
+            german = 0,
+            french = 0,
+            slavic = 0,
+            custom = 0,
+        },
         cleanCyrillic = true,
         cleanGerman = false,
         cleanFrench = false,
@@ -199,11 +206,26 @@ function CleanMyChat:MessageNeedsToBeRemoved(_, ...)
     local removeMessage = removeFrenchMessage or removeGermanMessage or removeCyrillicMessage or removeCustomMessage
 
     local found = {}
-    if removeCyrillicMessage then table.insert(found, "Cyrillic") end
-    if removeGermanMessage then table.insert(found, "German") end
-    if removeFrenchMessage then table.insert(found, "French") end
-    if removeSlavicMessage then table.insert(found, "Slavic") end
-    if removeCustomMessage then table.insert(found, "Custom") end
+    if removeCyrillicMessage then
+        self.saved.statistic.cyrillic = self.saved.statistic.cyrillic + 1
+        table.insert(found, "Cyrillic")
+    end
+    if removeGermanMessage then
+        self.saved.statistic.german = self.saved.statistic.german + 1
+        table.insert(found, "German")
+    end
+    if removeFrenchMessage then
+        self.saved.statistic.french = self.saved.statistic.french + 1
+        table.insert(found, "French")
+    end
+    if removeSlavicMessage then
+        self.saved.statistic.slavic = self.saved.statistic.slavic + 1
+        table.insert(found, "Slavic")
+    end
+    if removeCustomMessage then
+        self.saved.statistic.custom = self.saved.statistic.custom + 1
+        table.insert(found, "Custom")
+    end
 
     if self.saved.debug then
         Debug(tostring(message))
@@ -297,6 +319,19 @@ function CleanMyChat:RegisterSettings()
         end
 
         local data = {
+            {
+                type = "description",
+                name = "Statistic",
+                text = function()
+                    local statistic = {}
+                    for k,v in pairs(self.saved.statistic) do
+                        if self.saved[zo_strformat("clean<<C:1>>", k)] then
+                            table.insert(statistic, zo_strformat("<<1>> <<C:2>>", v, k))
+                        end
+                    end
+                    return zo_strformat("<<1>> messages blocked.", ZO_GenerateCommaSeparatedList(statistic))
+                end
+            },
             {
                 type = "checkbox",
                 name = "Clean Cyrillic",
@@ -443,6 +478,10 @@ function CleanMyChat:Migrate()
         self.saved.channel = {}
         for i, v in pairs(self.defaults.channel) do
             self.saved.channel[i] = v
+        end
+        self.saved.statistic = {}
+        for k, v in pairs(self.defaults.statistic) do
+            self.saved.statistic[k] = v
         end
         self.saved.lastVersion = {
             major = 1,
