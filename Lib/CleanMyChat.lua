@@ -401,7 +401,7 @@ function CleanMyChat:RegisterSettings()
                 name = "Debug",
                 getFunc = function() return self.saved.debug end,
                 setFunc = function(value)
-                    Debug("Debug output: " .. value)
+                    Debug("Debug output: " .. tostring(value))
                     self.saved.debug = value
                 end
             },
