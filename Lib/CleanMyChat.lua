@@ -10,14 +10,73 @@ CleanMyChat = {
     author = "Tyx",
     name = "CleanMyChat",
     displayName = "Clean My Chat",
-    version = "1.0.0",
-    saved_version = 1,
+    version = "1.1.0",
+    savedVersion = 1,
+    channelNames = {
+        [CHAT_CHANNEL_SAY] = GetString(SI_CHAT_CHANNEL_NAME_SAY),
+        [CHAT_CHANNEL_YELL] = GetString(SI_CHAT_CHANNEL_NAME_YELL),
+        [CHAT_CHANNEL_EMOTE] = GetString(SI_CHAT_CHANNEL_NAME_EMOTE),
+        [CHAT_CHANNEL_WHISPER] = GetString(SI_CHAT_CHANNEL_NAME_WHISPER),
+        -- Zone
+        [CHAT_CHANNEL_ZONE] = GetString(SI_CHAT_CHANNEL_NAME_ZONE),
+        [CHAT_CHANNEL_ZONE_LANGUAGE_1] = GetString(SI_CHAT_CHANNEL_NAME_ZONE_ENGLISH),
+        [CHAT_CHANNEL_ZONE_LANGUAGE_2] = GetString(SI_CHAT_CHANNEL_NAME_ZONE_FRENCH),
+        [CHAT_CHANNEL_ZONE_LANGUAGE_3] = GetString(SI_CHAT_CHANNEL_NAME_ZONE_GERMAN),
+        [CHAT_CHANNEL_ZONE_LANGUAGE_4] = GetString(SI_CHAT_CHANNEL_NAME_ZONE_JAPANESE),
+        -- Party
+        [CHAT_CHANNEL_PARTY] = GetString(SI_CHAT_CHANNEL_NAME_PARTY),
+        -- Guild - no generic names found
+        [CHAT_CHANNEL_GUILD_1] = "Guild 1",
+        [CHAT_CHANNEL_GUILD_2] = "Guild 2",
+        [CHAT_CHANNEL_GUILD_3] = "Guild 3",
+        [CHAT_CHANNEL_GUILD_4] = "Guild 4",
+        [CHAT_CHANNEL_GUILD_5] = "Guild 5",
+        -- Officer - no generic names found
+        [CHAT_CHANNEL_OFFICER_1] = "Officer 1",
+        [CHAT_CHANNEL_OFFICER_2] = "Officer 2",
+        [CHAT_CHANNEL_OFFICER_3] = "Officer 3",
+        [CHAT_CHANNEL_OFFICER_4] = "Officer 4",
+        [CHAT_CHANNEL_OFFICER_5] = "Officer 5",
+    },
     defaults = {
+        debug = false,
+        lastVersion = {
+            major = 1,
+            minor = 1
+        },
         cleanCyrillic = true,
         cleanGerman = false,
         cleanFrench = false,
+        cleanSlavic = false,
         cleanCustom = false,
-        customFilter = {}
+        customFilter = {},
+        filterChannel = false,
+        channel = {
+            [CHAT_CHANNEL_SAY] = true,
+            [CHAT_CHANNEL_YELL] = true,
+            [CHAT_CHANNEL_EMOTE] = true,
+            [CHAT_CHANNEL_WHISPER] = false,
+            -- Zone
+            [CHAT_CHANNEL_ZONE] = true,
+            [CHAT_CHANNEL_ZONE_LANGUAGE_1] = false,
+            [CHAT_CHANNEL_ZONE_LANGUAGE_2] = false,
+            [CHAT_CHANNEL_ZONE_LANGUAGE_3] = false,
+            [CHAT_CHANNEL_ZONE_LANGUAGE_4] = false,
+            -- Party
+            [CHAT_CHANNEL_PARTY] = false,
+            -- Guild
+            [CHAT_CHANNEL_GUILD_1] = false,
+            [CHAT_CHANNEL_GUILD_2] = false,
+            [CHAT_CHANNEL_GUILD_3] = false,
+            [CHAT_CHANNEL_GUILD_4] = false,
+            [CHAT_CHANNEL_GUILD_5] = false,
+            -- Officer
+            [CHAT_CHANNEL_OFFICER_1] = false,
+            [CHAT_CHANNEL_OFFICER_2] = false,
+            [CHAT_CHANNEL_OFFICER_3] = false,
+            [CHAT_CHANNEL_OFFICER_4] = false,
+            [CHAT_CHANNEL_OFFICER_5] = false,
+        }
     },
 }
 
@@ -32,12 +91,49 @@ local alphabet = {
     },
     french = {
         "é", "à", "ê", "â", "î"
+    },
+    slavic = {
+        "ę", "ł", "ą", "ć", "ś", "ę"
     }
 }
 
 local LAM = LibAddonMenu2
+local Log
 
-local function Test(message, table)
+--- Debug output to the console
+--@param .. variable parameters to be printed as a debug log
+local function Debug(...)
+    if Log then
+        Log:Debug(...)
+    else
+        d(...)
+    end
+end
+
+--- Output to the console
+--@param .. variable parameters to be printed as a log
+local function Print(...)
+    if Log then
+        Log:Info(...)
+    else
+        CHAT_SYSTEM:AddMessage(...)
+    end
+end
+
+--- Warning output to the console
+--@param .. variable parameters to be printed as a log
+local function Warn(...)
+    if Log then
+        Log:Warn(...)
+    else
+        for i = 1, select("#", ...) do
+            -- Print each warning parameter in orange
+            CHAT_SYSTEM:AddMessage(zo_strformat("|cFF7900<<1>>|r", select(i, ...)))
+        end
+    end
+end
+
+local function Check(message, table)
     for _, letter in ipairs(table) do
         if string.find(string.lower(message), string.lower(letter)) then return true end
     end
@@ -47,78 +143,121 @@ end
 --- Test if message contains letters known to be common in cyrillic languages
 -- @param message text to be filtered
 function CleanMyChat.IsCyrillic(message)
-    return Test(message, alphabet.cyrillic)
+    return Check(message, alphabet.cyrillic)
 end
 
 --- Test if message contains letters known to be common in German
 -- @param message text to be filtered
 function CleanMyChat.IsGerman(message)
-    return Test(message, alphabet.german)
+    return Check(message, alphabet.german)
 end
 
 --- Test if message contains letters known to be common in French
 -- @param message text to be filtered
 function CleanMyChat.IsFrench(message)
-    return Test(message, alphabet.french)
+    return Check(message, alphabet.french)
+end
+
+--- Test if message contains letters known to be common in Slavic
+-- @param message text to be filtered
+function CleanMyChat.IsSlavic(message)
+    return Check(message, alphabet.slavic)
 end
 
 --- Test if message contains letters previous defined in the custom filter
 -- @param message text to be filtered
 function CleanMyChat:IsCustom(message)
-    return Test(message, self.saved.customFilter)
+    return Check(message, self.saved.customFilter)
+end
+
+
+function CleanMyChat:MessageNeedsToBeRemoved(_, ...)
+    local channel = select(1, ...)
+    local shouldBeFiltered = self.saved.channel[channel]
+
+    if self.saved.debug then
+        local channelName = self.channelNames[channel] or "System or World"
+        Debug(zo_strformat("Broadcast on channel <<1>>::<<2>>", channel, channelName))
+        if shouldBeFiltered then
+            Debug("Set to be filtered")
+        else
+            Debug("Is not set to be filtered")
+        end
+    end
+
+    if self.saved.filterChannel and not shouldBeFiltered then return false end
+
+    local fromName = zo_strformat("<<1>>", select(2, ...))
+    local message = zo_strformat("<<1>>", select(3, ...))
+    local displayName = zo_strformat("<<1>>", select(5, ...))
+
+    local removeCyrillicMessage = self.saved.cleanCyrillic and self.IsCyrillic(message)
+    local removeGermanMessage = self.saved.cleanGerman and self.IsGerman(message)
+    local removeFrenchMessage = self.saved.cleanFrench and self.IsFrench(message)
+    local removeSlavicMessage = self.saved.cleanSlavic and self.IsSlavic(message)
+    local removeCustomMessage = self.saved.cleanCustom and self:IsCustom(message)
+    local removeMessage = removeFrenchMessage or removeGermanMessage or removeCyrillicMessage or removeCustomMessage
+
+    local found = {}
+    if removeCyrillicMessage then table.insert(found, "Cyrillic") end
+    if removeGermanMessage then table.insert(found, "German") end
+    if removeFrenchMessage then table.insert(found, "French") end
+    if removeSlavicMessage then table.insert(found, "Slavic") end
+    if removeCustomMessage then table.insert(found, "Custom") end
+
+    if self.saved.debug then
+        Debug(tostring(message))
+        if removeMessage then
+            Debug(zo_strformat(
+                    "Found <<1>> characters in the message.\nIt will be removed if it was not from you.",
+                    ZO_GenerateCommaSeparatedList(found)
+                )
+            )
+        end
+    end
+
+    -- Don't filter your own message
+    if removeMessage and (GetUnitName("player") == fromName or GetDisplayName() == displayName) then
+        Warn(zo_strformat("You just wrote with filtered <<1>> characters.\n"
+                .. "You might not see responses.\n"
+                .."Maybe you want to unset the filter of the language you just used...\n"
+                .. "Write /cmc to open the settings menu.",
+                ZO_GenerateCommaSeparatedList(found)
+        ))
+        return false
+    end
+
+    return removeMessage
 end
 
 --- Register filter for chat event
 function CleanMyChat:RegisterEvent()
-    local function MessageNeedsToBeRemoved(_, ...)
-        local fromName = tostring(select(1, ...))
-        local message = tostring(select(2, ...))
-        local displayName = tostring(select(4, ...))
-
-        local removeCyrillicMessage = self.saved.cleanCyrillic and self.IsCyrillic(message)
-        local removeGermanMessage = self.saved.cleanGerman and self.IsGerman(message)
-        local removeFrenchMessage = self.saved.cleanFrench and self.IsFrench(message)
-        local removeCustomMessage = self.saved.cleanCustom and self:IsCustom(message)
-        local removeMessage = removeFrenchMessage or removeGermanMessage or removeCyrillicMessage or removeCustomMessage
-
-        -- Don't filter your own message
-        if removeMessage and (GetUnitName("player") == fromName or GetDisplayName() == displayName) then
-            if removeGermanMessage then
-                CHAT_SYSTEM:AddMessage("You just wrote with filtered German characters.\n"
-                        .. "You might not see responses.\n"
-                        .."Maybe you want to unset the filter of the language you just used...\n"
-                        .. "Write /cmc to open the settings menu.")
-            elseif removeCyrillicMessage then
-                CHAT_SYSTEM:AddMessage("You just wrote with filtered cyrillic characters.\n"
-                        .. "You might not see responses.\n"
-                        .."Maybe you want to unset the filter of the language you just used...\n"
-                        .. "Write /cmc to open the settings menu.")
-            elseif removeFrenchMessage then
-                CHAT_SYSTEM:AddMessage("You just wrote with filtered French characters.\n"
-                        .. "You might not see responses.\n"
-                        .."Maybe you want to unset the filter of the language you just used...\n"
-                        .. "Write /cmc to open the settings menu.")
-            else
-                CHAT_SYSTEM:AddMessage("You just wrote with filtered custom characters.\n"
-                        .. "You might not see responses.\n"
-                        .."Maybe you want to unset the filter of the language you just used...\n"
-                        .. "Write /cmc to open the settings menu.")
-            end
-            return false
-        end
-
-        return removeMessage
-
+    if self.saved.debug then
+        Debug("Register for chat event")
     end
-
     local function OnChatEvent(control, ...)
-        if not MessageNeedsToBeRemoved(...) then
+        if not self:MessageNeedsToBeRemoved(control, ...) then
             return CHAT_ROUTER.registeredEventHandlers[EVENT_CHAT_MESSAGE_CHANNEL](control, ...)
         end
     end
 
     EVENT_MANAGER:UnregisterForEvent("ChatRouter", EVENT_CHAT_MESSAGE_CHANNEL)
     EVENT_MANAGER:RegisterForEvent("ChatRouter", EVENT_CHAT_MESSAGE_CHANNEL, OnChatEvent)
+end
+
+
+local pFormatMessage
+--- Register filter for pChat addon
+function CleanMyChat:RegisterPChat()
+    if self.saved.debug then
+        Debug("Register for pChat")
+    end
+    pFormatMessage = pChat.FormatMessage
+    --- Function intercepts pChat FormatMessage (3457) and mimics its spam detection
+    pChat.FormatMessage = function(...)
+        if self:MessageNeedsToBeRemoved(nil, ...) then return end
+        return pFormatMessage(...)
+    end
 end
 
 --- Create menu in LibAddonMenu2 settings if available
@@ -131,11 +270,11 @@ function CleanMyChat:RegisterSettings()
         displayName = self.displayName,
         author = "|c5175ea" .. self.author .. "|r",
         version = self.version,
-        --website = "https://rantzen.net/clock-tamriel-standard-time/",
+        website = "https://www.esoui.com/downloads/info2544-CleanMyChat.html",
         feedback = "https://github.com/Tyxz/Clean-My-Chat/issues/new/choose",
         donation = link,
         --slashCommand = "/cmc",
-        --registerForRefresh = true,
+        registerForRefresh = true,
         registerForDefaults = true,
         resetFunc = function()
             for k,v in pairs(self.defaults) do
@@ -146,6 +285,17 @@ function CleanMyChat:RegisterSettings()
 
     if LAM then
         CLEAN_MY_CHAT_PANEL = LAM:RegisterAddonPanel(self.name, panel)
+
+        local controls = {}
+        for i, _ in pairs(self.defaults.channel) do
+            table.insert(controls, {
+                type = "checkbox",
+                name = self.channelNames[i],
+                getFunc = function() return self.saved.channel[i] end,
+                setFunc = function(value) self.saved.channel[i] = value end
+            })
+        end
+
         local data = {
             {
                 type = "checkbox",
@@ -170,6 +320,13 @@ function CleanMyChat:RegisterSettings()
             },
             {
                 type = "checkbox",
+                name = "Clean Slavic",
+                tooltip = table.concat(alphabet.slavic, ", "),
+                getFunc = function() return self.saved.cleanSlavic end,
+                setFunc = function(value) self.saved.cleanSlavic = value end
+            },
+            {
+                type = "checkbox",
                 name = "Clean Custom",
                 disabled = function() return self.customFilter == {} end,
                 getFunc = function() return self.saved.cleanCustom end,
@@ -190,7 +347,29 @@ function CleanMyChat:RegisterSettings()
                         end
                     end
                 end
-            }
+            },
+            {
+                type = "checkbox",
+                name = "Filter channel",
+                tooltip = "Filter only specific channels",
+                getFunc = function() return self.saved.filterChannel end,
+                setFunc = function(value) self.saved.filterChannel = value end
+            },
+            {
+                type = "submenu",
+                name = "Channels",
+                controls = controls,
+                disabled = function() return not self.saved.filterChannel end,
+            },
+            {
+                type = "checkbox",
+                name = "Debug",
+                getFunc = function() return self.saved.debug end,
+                setFunc = function(value)
+                    Debug("Debug output: " .. value)
+                    self.saved.debug = value
+                end
+            },
         }
         LAM:RegisterOptionControls(self.name, data)
 
@@ -230,36 +409,74 @@ function CleanMyChat:RegisterCommands()
             else
                 for k, v in pairs(self.saved) do
                     if k ~= "customFilter" then
-                        CHAT_SYSTEM:AddMessage(k .. ":\t" .. v)
+                        Print(k .. ":\t" .. v)
                     end
                 end
             end
         else
             if command == "filter" then
-                CHAT_SYSTEM:AddMessage("Custom filter:\n" .. table.concat(self.saved.customFilter, ", "))
+                Print("Custom filter:\n" .. table.concat(self.saved.customFilter, ", "))
             elseif command == "cyrillic" then
                 self.saved.cleanCyrillic = not self.saved.cleanCyrillic
-                CHAT_SYSTEM:AddMessage("Cyrillic filter:\t" .. self.saved.cleanCyrillic)
+                Print("Cyrillic filter:\t" .. self.saved.cleanCyrillic)
             elseif command == "german" then
                 self.saved.cleanGerman = not self.saved.cleanGerman
-                CHAT_SYSTEM:AddMessage("German filter:\t" .. self.saved.cleanGerman)
+                Print("German filter:\t" .. self.saved.cleanGerman)
             elseif command == "french" then
                 self.saved.cleanFrench = not self.saved.cleanFrench
-                CHAT_SYSTEM:AddMessage("German filter:\t" .. self.saved.cleanGerman)
+                Print("French filter:\t" .. self.saved.cleanFrench)
+            elseif command == "slavic" then
+                self.saved.cleanSlavic = not self.saved.cleanSlavic
+                Print("Slavic filter:\t" .. self.saved.cleanSlavic)
             elseif command == "custom" then
                 self.saved.cleanCustom = not self.saved.cleanCustom
-                CHAT_SYSTEM:AddMessage("Custom filter:\t" .. self.saved.cleanCustom)
+                Print("Custom filter:\t" .. self.saved.cleanCustom)
             end
         end
     end
 end
 
+--- Function to migrate saved variables without resetting them
+function CleanMyChat:Migrate()
+    --- Version is 1.0.0
+    if not self.saved.lastVersion then
+        self.saved.channel = {}
+        for i, v in pairs(self.defaults.channel) do
+            self.saved.channel[i] = v
+        end
+        self.saved.lastVersion = {
+            major = 1,
+            minor = 0
+        }
+    end
+    local major, minor = string.match(self.version, "(%d+).(%d+).%d+")
+    major, minor = tonumber(major), tonumber(minor)
+    local lastVersion = self.saved.lastVersion
+    if lastVersion.major < major or lastVersion.minor < minor then
+        if self.saved.debug then
+            Debug(zo_strformat("Migrate from <<1>>.<<2>> to <<3>>", lastVersion.major, lastVersion.minor, self.version))
+        end
+    end
+    self.saved.lastVersion = {
+        major = major,
+        minor = minor
+    }
+end
+
 --- Initialize functions
 function CleanMyChat:Initialize()
-    self.saved = ZO_SavedVars:NewAccountWide(self.name .. "_Settings", self.saved_version, nil, self.defaults)
+    if LibDebugLogger then
+        Log = LibDebugLogger(self.name)
+    end
+    self.saved = ZO_SavedVars:NewAccountWide(self.name .. "_Settings", self.savedVersion, nil, self.defaults)
+    self:Migrate()
     self:RegisterSettings()
-    self:RegisterEvent()
     self:RegisterCommands()
+    if pChat then
+        self:RegisterPChat()
+    else
+        self:RegisterEvent()
+    end
     return self
 end
 
