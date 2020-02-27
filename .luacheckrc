@@ -50,6 +50,7 @@ stds.eso = {
         "pChat",
         "SLASH_COMMANDS",
         "ZO_GenerateCommaSeparatedList",
+        "ZO_PreHook",
         "ZO_SavedVars",
         "zo_strformat",
     },

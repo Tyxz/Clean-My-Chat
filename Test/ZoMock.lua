@@ -48,6 +48,14 @@ _G.d = function(...)
     end
 end
 
+_G.zo_strformat = function(str, ...)
+    local out = str
+    for i = 1, select("#", ...) do
+        out = string.gsub(out, "<<".. tostring(i) .. ">>", select(i, ...))
+    end
+    print(out)
+end
+
 _G.SLASH_COMMANDS = {}
 
 _G.CHAT_SYSTEM = {}

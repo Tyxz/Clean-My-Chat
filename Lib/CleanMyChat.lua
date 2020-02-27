@@ -100,7 +100,7 @@ local alphabet = {
         "é", "à", "ê", "â", "î"
     },
     slavic = {
-        "ę", "ł", "ą", "ć", "ś", "ę"
+        "ł", "ą", "ć", "ś", "ę", "ż"
     }
 }
 
@@ -203,7 +203,8 @@ function CleanMyChat:MessageNeedsToBeRemoved(_, ...)
     local removeFrenchMessage = self.saved.cleanFrench and self.IsFrench(message)
     local removeSlavicMessage = self.saved.cleanSlavic and self.IsSlavic(message)
     local removeCustomMessage = self.saved.cleanCustom and self:IsCustom(message)
-    local removeMessage = removeFrenchMessage or removeGermanMessage or removeCyrillicMessage or removeCustomMessage
+    local removeMessage = removeSlavicMessage or removeFrenchMessage or removeGermanMessage
+            or removeCyrillicMessage or removeCustomMessage
 
     local found = {}
     if removeCyrillicMessage then
@@ -246,7 +247,7 @@ function CleanMyChat:MessageNeedsToBeRemoved(_, ...)
                 .. "Write /cmc to open the settings menu.",
                 ZO_GenerateCommaSeparatedList(found)
         ))
-        return false
+        removeMessage = false
     end
 
     return removeMessage
@@ -257,6 +258,7 @@ function CleanMyChat:RegisterEvent()
     if self.saved.debug then
         Debug("Register for chat event")
     end
+    -- TODO: Change this to a hook
     local function OnChatEvent(control, ...)
         if not self:MessageNeedsToBeRemoved(control, ...) then
             return CHAT_ROUTER.registeredEventHandlers[EVENT_CHAT_MESSAGE_CHANNEL](control, ...)
@@ -265,32 +267,32 @@ function CleanMyChat:RegisterEvent()
 
     EVENT_MANAGER:UnregisterForEvent("ChatRouter", EVENT_CHAT_MESSAGE_CHANNEL)
     EVENT_MANAGER:RegisterForEvent("ChatRouter", EVENT_CHAT_MESSAGE_CHANNEL, OnChatEvent)
+
+    --ZO_PreHook(ZO_ChatSystem_GetEventHandlers(), EVENT_CHAT_MESSAGE_CHANNEL, function(...)
+    --    return self:MessageNeedsToBeRemoved(nil, ...)
+    --end)
 end
 
-
-local pFormatMessage
 --- Register filter for pChat addon
 function CleanMyChat:RegisterPChat()
     if self.saved.debug then
         Debug("Register for pChat")
     end
-    pFormatMessage = pChat.FormatMessage
-    --- Function intercepts pChat FormatMessage (3457) and mimics its spam detection
-    pChat.FormatMessage = function(...)
-        if self:MessageNeedsToBeRemoved(nil, ...) then return end
-        return pFormatMessage(...)
-    end
+    --- Function intercepts pChat FormatMessage (3457) and mimics its spam detection (Hook idea from Baertram@ESOUI)
+    ZO_PreHook(pChat.chatHandlers, EVENT_CHAT_MESSAGE_CHANNEL, function(...)
+        return self:MessageNeedsToBeRemoved(nil, ...)
+    end)
 end
 
 --- Create menu in LibAddonMenu2 settings if available
 function CleanMyChat:RegisterSettings()
     local lang = GetCVar("Language.2")
-    local link = "https://" .. lang .. ".liberapay.com/Tyx/"
+    local link = zo_strformat("https://<<1>>.liberapay.com/Tyx/", lang)
     local panel = {
         type = "panel",
         name = self.name,
         displayName = self.displayName,
-        author = "|c5175ea" .. self.author .. "|r",
+        author = zo_strformat("|c5175ea<<1>>|r", self.author),
         version = self.version,
         website = "https://www.esoui.com/downloads/info2544-CleanMyChat.html",
         feedback = "https://github.com/Tyxz/Clean-My-Chat/issues/new/choose",
@@ -401,7 +403,7 @@ function CleanMyChat:RegisterSettings()
                 name = "Debug",
                 getFunc = function() return self.saved.debug end,
                 setFunc = function(value)
-                    Debug("Debug output: " .. tostring(value))
+                    Debug(zo_strformat("Debug output: <<1>>",  value))
                     self.saved.debug = value
                 end
             },
@@ -444,28 +446,28 @@ function CleanMyChat:RegisterCommands()
             else
                 for k, v in pairs(self.saved) do
                     if k ~= "customFilter" then
-                        Print(k .. ":\t" .. v)
+                        Print(zo_strformat("<<1>>:\t<<2>>", k, v))
                     end
                 end
             end
         else
             if command == "filter" then
-                Print("Custom filter:\n" .. table.concat(self.saved.customFilter, ", "))
+                Print(zo_strformat("Custom filter:\n<<1>>", table.concat(self.saved.customFilter, ", ")))
             elseif command == "cyrillic" then
                 self.saved.cleanCyrillic = not self.saved.cleanCyrillic
-                Print("Cyrillic filter:\t" .. self.saved.cleanCyrillic)
+                Print(zo_strformat("Cyrillic filter:\t<<1>>", self.saved.cleanCyrillic))
             elseif command == "german" then
                 self.saved.cleanGerman = not self.saved.cleanGerman
-                Print("German filter:\t" .. self.saved.cleanGerman)
+                Print(zo_strformat("German filter:\t<<1>>", self.saved.cleanGerman))
             elseif command == "french" then
                 self.saved.cleanFrench = not self.saved.cleanFrench
-                Print("French filter:\t" .. self.saved.cleanFrench)
+                Print(zo_strformat("French filter:\t<<1>>", self.saved.cleanFrench))
             elseif command == "slavic" then
                 self.saved.cleanSlavic = not self.saved.cleanSlavic
-                Print("Slavic filter:\t" .. self.saved.cleanSlavic)
+                Print(zo_strformat("Slavic filter:\t<<1>>", self.saved.cleanSlavic))
             elseif command == "custom" then
                 self.saved.cleanCustom = not self.saved.cleanCustom
-                Print("Custom filter:\t" .. self.saved.cleanCustom)
+                Print(zo_strformat("Custom filter:\t<<1>>", self.saved.cleanCustom))
             end
         end
     end
