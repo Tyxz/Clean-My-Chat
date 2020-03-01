@@ -48,18 +48,61 @@ _G.d = function(...)
     end
 end
 
+_G.zo_strformat = function(str, ...)
+    local out = str
+    local args = table.pack(...)
+    for i=1,args.n do
+        local pattern = "<<".. tostring(i) .. ">>"
+        out = string.gsub(out, pattern, args[i])
+    end
+    return out
+end
+
+_G.ZO_GenerateCommaSeparatedList = function(tbl)
+    local str = ""
+    local n = table.getn(tbl)
+    for i, v in ipairs(tbl) do
+        if i == 1 then
+            str = v
+        elseif i == n then
+            str = str .. " and " .. v
+        else
+            str = str .. ", " .. v
+        end
+    end
+    return str
+end
+
+_G.ZO_ChatSystem = {}
+
+_G.ZO_PreHook = function(_, _ ,_) end
+
+_G.CHAT_ROUTER = {
+    registeredEventHandlers = {}
+}
+function _G.CHAT_ROUTER:AddEventFormatter(_, _) end
+
+local eventHandlers = {}
+_G.ZO_ChatSystem_GetEventHandlers = function() return eventHandlers end
+
 _G.SLASH_COMMANDS = {}
 
 _G.CHAT_SYSTEM = {}
 function _G.CHAT_SYSTEM:AddMessage(...) _G.d(...) end
 
 function _G.GetString(_) return "Test" end
+function _G.GetUnitName(_) return "Test" end
+function _G.GetDisplayName() return "Test" end
+
+function _G.GetWorldName() return "EU Megaserver" end
+
 
 
 _G.CHAT_CHANNEL_SAY = 1
 _G.CHAT_CHANNEL_YELL = 2
 _G.CHAT_CHANNEL_EMOTE = 3
 _G.CHAT_CHANNEL_WHISPER = 4
+_G.CHAT_CHANNEL_WHISPER_SENT = 21
 -- Zone
 _G.CHAT_CHANNEL_ZONE = 5
 _G.CHAT_CHANNEL_ZONE_LANGUAGE_1 = 6

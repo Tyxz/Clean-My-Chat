@@ -7,12 +7,12 @@
 
 |   |   |   |
 |---|---|---|
-| Version: | 1.0.0 | [![Documentation](https://img.shields.io/website?label=%7C&up_color=important&up_message=documentation&url=https%3A%2F%2Ftyxz.github.io%2FClean-My-Chat%2F)](https://tyxz.github.io/Clean-My-Chat/) |  
+| Version: | 1.1.1 | [![Documentation](https://img.shields.io/website?label=%7C&up_color=important&up_message=documentation&url=https%3A%2F%2Ftyxz.github.io%2FClean-My-Chat%2F)](https://tyxz.github.io/Clean-My-Chat/) |  
 | Build for game version: | 100030 | [![Download](https://img.shields.io/website?label=%7C&up_color=blue&up_message=download&url=http%3A%2F%2Fwww.esoui.com%2Fdownloads%2Finfo2544-CleanMyChat.html)](https://www.esoui.com/downloads/info2544-CleanMyChat.html) |
 
 A small addon for Elder Scrolls Online (no affiliation), to reduce messages in unknown languages from the chat window.
 
-It filters each message if it contains forbidden characters like French ("é", "à"), German (ä, ö, ü) or cyrillic (б", "г", "ж", etc.).
+It filters each message if it contains forbidden characters like Slavic ("ę", "ł"), French ("é", "à"), German (ä, ö, ü) or cyrillic (б", "г", "ж", etc.).
 
 You are also able to define your own filtered words or characters. For example, 
 it could be also used to filter swear words not detected by ESO itself. 
@@ -24,6 +24,7 @@ and set or unset the filter for predefined characters.
 - **/cmc cyrillic** toggles the cyrillic character filter
 - **/cmc german** toggles the German character filter
 - **/cmc french** toggles the French character filter
+- **/cmc slavic** toggles the Slavic character filter
 - **/cmc custom** toggles the custom character filter
 - **/cmc filter** shows the defined custom characters
 

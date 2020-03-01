@@ -2,7 +2,7 @@
     Project:    Clean My Chat
     Author:     Arne Rantzen (Tyx)
     Created:    2020-02-25
-    Updated:    2020-02-25
+    Updated:    2020-03-01
     License:    GPL-3.0
 --------------------------------------------]]--
 
@@ -10,13 +10,14 @@ CleanMyChat = {
     author = "Tyx",
     name = "CleanMyChat",
     displayName = "Clean My Chat",
-    version = "1.1.0",
+    version = "1.1.1",
     savedVersion = 1,
     channelNames = {
         [CHAT_CHANNEL_SAY] = GetString(SI_CHAT_CHANNEL_NAME_SAY),
         [CHAT_CHANNEL_YELL] = GetString(SI_CHAT_CHANNEL_NAME_YELL),
         [CHAT_CHANNEL_EMOTE] = GetString(SI_CHAT_CHANNEL_NAME_EMOTE),
         [CHAT_CHANNEL_WHISPER] = GetString(SI_CHAT_CHANNEL_NAME_WHISPER),
+        [CHAT_CHANNEL_WHISPER_SENT] = "Whisper sent",
         -- Zone
         [CHAT_CHANNEL_ZONE] = GetString(SI_CHAT_CHANNEL_NAME_ZONE),
         [CHAT_CHANNEL_ZONE_LANGUAGE_1] = GetString(SI_CHAT_CHANNEL_NAME_ZONE_ENGLISH),
@@ -37,6 +38,7 @@ CleanMyChat = {
         [CHAT_CHANNEL_OFFICER_3] = "Officer 3",
         [CHAT_CHANNEL_OFFICER_4] = "Officer 4",
         [CHAT_CHANNEL_OFFICER_5] = "Officer 5",
+
     },
     defaults = {
         debug = false,
@@ -51,13 +53,13 @@ CleanMyChat = {
             slavic = 0,
             custom = 0,
         },
-        cleanCyrillic = true,
+        cleanCyrillic = false,
         cleanGerman = false,
         cleanFrench = false,
         cleanSlavic = false,
         cleanCustom = false,
         customFilter = {},
-        filterChannel = false,
+        filterChannel = true,
         channel = {
             [CHAT_CHANNEL_SAY] = true,
             [CHAT_CHANNEL_YELL] = true,
@@ -91,7 +93,7 @@ local alphabet = {
     cyrillic = {
         "Б", "б", "Г", "г", "Д", "д", "Ж", "ж", "З", "з", "И", "и", "Й", "й", "К", "к", "Л", "л", "Н", "н", "П",
         "п", "У", "Ф", "ф", "Ц", "ц", "Ч", "ч", "Ш", "ш", "Щ", "щ", "Ъ", "ъ", "Ы", "ы", "Э", "э", "Ю", "ю", "Я",
-        "я", -- "Ђ", "ђ", "Ѓ", "ѓ", "Є", "є", "Љ", "љ", "Њ", "њ", "Ћ", "ћ", "Ќ", "ќ", "Ѝ", "ѝ", "Ў", "ў", "Џ", "џ"
+        "я"
     },
     german = {
         "ä", "ö", "ü"
@@ -100,7 +102,7 @@ local alphabet = {
         "é", "à", "ê", "â", "î"
     },
     slavic = {
-        "ę", "ł", "ą", "ć", "ś", "ę"
+        "ł", "ą", "ć", "ś", "ę", "ż"
     }
 }
 
@@ -108,7 +110,7 @@ local LAM = LibAddonMenu2
 local Log
 
 --- Debug output to the console
---@param .. variable parameters to be printed as a debug log
+--- @param vararg string variable parameters to be printed as a debug log
 local function Debug(...)
     if Log then
         Log:Debug(...)
@@ -118,7 +120,7 @@ local function Debug(...)
 end
 
 --- Output to the console
---@param .. variable parameters to be printed as a log
+--- @param vararg string variable parameters to be printed as a log
 local function Print(...)
     if Log then
         Log:Info(...)
@@ -128,7 +130,7 @@ local function Print(...)
 end
 
 --- Warning output to the console
---@param .. variable parameters to be printed as a log
+--- @param vararg string variable parameters to be printed as a log
 local function Warn(...)
     if Log then
         Log:Warn(...)
@@ -148,43 +150,51 @@ local function Check(message, table)
 end
 
 --- Test if message contains letters known to be common in cyrillic languages
--- @param message text to be filtered
+---@param message string to be filtered
 function CleanMyChat.IsCyrillic(message)
     return Check(message, alphabet.cyrillic)
 end
 
 --- Test if message contains letters known to be common in German
--- @param message text to be filtered
+---@param message string to be filtered
 function CleanMyChat.IsGerman(message)
     return Check(message, alphabet.german)
 end
 
 --- Test if message contains letters known to be common in French
--- @param message text to be filtered
+---@param message string to be filtered
 function CleanMyChat.IsFrench(message)
     return Check(message, alphabet.french)
 end
 
 --- Test if message contains letters known to be common in Slavic
--- @param message text to be filtered
+---@param message string to be filtered
 function CleanMyChat.IsSlavic(message)
     return Check(message, alphabet.slavic)
 end
 
 --- Test if message contains letters previous defined in the custom filter
--- @param message text to be filtered
+---@param message string to be filtered
 function CleanMyChat:IsCustom(message)
     return Check(message, self.saved.customFilter)
 end
 
+--- Will check a chat event formatter, if it should be removed based on the set filter
+--- @param messageType number channel
+--- @param fromName string name of the account it is send from
+--- @param text string message
+--- @param isFromCustomerService boolean if the message is from a customer service agent
+--- @param fromDisplayName string name of the character it is send from
+--- @return boolean if the message should be filtered out
+function CleanMyChat:MessageNeedsToBeRemoved(messageType, fromName, text, isFromCustomerService, fromDisplayName)
+    -- never filter messages from customer service
+    if isFromCustomerService then return false end
 
-function CleanMyChat:MessageNeedsToBeRemoved(_, ...)
-    local channel = select(1, ...)
-    local shouldBeFiltered = self.saved.channel[channel]
+    local shouldBeFiltered = self.saved.channel[messageType]
 
     if self.saved.debug then
-        local channelName = self.channelNames[channel] or "System or World"
-        Debug(zo_strformat("Broadcast on channel <<1>>::<<2>>", channel, channelName))
+        local channelName = self.channelNames[messageType] or "System or World"
+        Debug(zo_strformat("Broadcast on channel <<1>>::<<2>>", messageType, channelName))
         if shouldBeFiltered then
             Debug("Set to be filtered")
         else
@@ -194,16 +204,17 @@ function CleanMyChat:MessageNeedsToBeRemoved(_, ...)
 
     if self.saved.filterChannel and not shouldBeFiltered then return false end
 
-    local fromName = zo_strformat("<<1>>", select(2, ...))
-    local message = zo_strformat("<<1>>", select(3, ...))
-    local displayName = zo_strformat("<<1>>", select(5, ...))
+    local name = zo_strformat("<<1>>", fromName)
+    local message = zo_strformat("<<1>>", text)
+    local displayName = zo_strformat("<<1>>", fromDisplayName)
 
     local removeCyrillicMessage = self.saved.cleanCyrillic and self.IsCyrillic(message)
     local removeGermanMessage = self.saved.cleanGerman and self.IsGerman(message)
     local removeFrenchMessage = self.saved.cleanFrench and self.IsFrench(message)
     local removeSlavicMessage = self.saved.cleanSlavic and self.IsSlavic(message)
     local removeCustomMessage = self.saved.cleanCustom and self:IsCustom(message)
-    local removeMessage = removeFrenchMessage or removeGermanMessage or removeCyrillicMessage or removeCustomMessage
+    local removeMessage = removeSlavicMessage or removeFrenchMessage or removeGermanMessage
+            or removeCyrillicMessage or removeCustomMessage
 
     local found = {}
     if removeCyrillicMessage then
@@ -239,14 +250,14 @@ function CleanMyChat:MessageNeedsToBeRemoved(_, ...)
     end
 
     -- Don't filter your own message
-    if removeMessage and (GetUnitName("player") == fromName or GetDisplayName() == displayName) then
+    if removeMessage and (GetUnitName("player") == name or GetDisplayName() == displayName) then
         Warn(zo_strformat("You just wrote with filtered <<1>> characters.\n"
                 .. "You might not see responses.\n"
                 .."Maybe you want to unset the filter of the language you just used...\n"
                 .. "Write /cmc to open the settings menu.",
                 ZO_GenerateCommaSeparatedList(found)
         ))
-        return false
+        removeMessage = false
     end
 
     return removeMessage
@@ -257,40 +268,41 @@ function CleanMyChat:RegisterEvent()
     if self.saved.debug then
         Debug("Register for chat event")
     end
-    local function OnChatEvent(control, ...)
-        if not self:MessageNeedsToBeRemoved(control, ...) then
-            return CHAT_ROUTER.registeredEventHandlers[EVENT_CHAT_MESSAGE_CHANNEL](control, ...)
-        end
-    end
+
+    -- Disable the whisper flash because of insecure code error
+    ZO_ChatSystem.OnFormattedChatMessage = nil
+
+    -- alternative: CHAT_ROUTER.registeredEventHandlers
+    local ZO_EventHandlers = ZO_ChatSystem_GetEventHandlers()
+
+    ZO_PreHook(ZO_EventHandlers, EVENT_CHAT_MESSAGE_CHANNEL, function(...)
+        return self:MessageNeedsToBeRemoved(...)
+    end)
 
     EVENT_MANAGER:UnregisterForEvent("ChatRouter", EVENT_CHAT_MESSAGE_CHANNEL)
-    EVENT_MANAGER:RegisterForEvent("ChatRouter", EVENT_CHAT_MESSAGE_CHANNEL, OnChatEvent)
+    CHAT_ROUTER:AddEventFormatter(EVENT_CHAT_MESSAGE_CHANNEL, ZO_EventHandlers[EVENT_CHAT_MESSAGE_CHANNEL])
 end
 
-
-local pFormatMessage
 --- Register filter for pChat addon
 function CleanMyChat:RegisterPChat()
     if self.saved.debug then
         Debug("Register for pChat")
     end
-    pFormatMessage = pChat.FormatMessage
-    --- Function intercepts pChat FormatMessage (3457) and mimics its spam detection
-    pChat.FormatMessage = function(...)
-        if self:MessageNeedsToBeRemoved(nil, ...) then return end
-        return pFormatMessage(...)
-    end
+    -- Function intercepts pChat FormatMessage (3457) and mimics its spam detection (Hook code from Baertram@ESOUI)
+    ZO_PreHook(pChat, "FormatMessage", function(...)
+        return self:MessageNeedsToBeRemoved(...)
+    end)
 end
 
 --- Create menu in LibAddonMenu2 settings if available
 function CleanMyChat:RegisterSettings()
     local lang = GetCVar("Language.2")
-    local link = "https://" .. lang .. ".liberapay.com/Tyx/"
+    local link = zo_strformat("https://<<1>>.liberapay.com/Tyx/", lang)
     local panel = {
         type = "panel",
         name = self.name,
         displayName = self.displayName,
-        author = "|c5175ea" .. self.author .. "|r",
+        author = zo_strformat("|c5175ea<<1>>|r", self.author),
         version = self.version,
         website = "https://www.esoui.com/downloads/info2544-CleanMyChat.html",
         feedback = "https://github.com/Tyxz/Clean-My-Chat/issues/new/choose",
@@ -401,7 +413,7 @@ function CleanMyChat:RegisterSettings()
                 name = "Debug",
                 getFunc = function() return self.saved.debug end,
                 setFunc = function(value)
-                    Debug("Debug output: " .. value)
+                    Debug(zo_strformat("Debug output: <<1>>",  value))
                     self.saved.debug = value
                 end
             },
@@ -444,28 +456,28 @@ function CleanMyChat:RegisterCommands()
             else
                 for k, v in pairs(self.saved) do
                     if k ~= "customFilter" then
-                        Print(k .. ":\t" .. v)
+                        Print(zo_strformat("<<1>>:\t<<2>>", k, v))
                     end
                 end
             end
         else
             if command == "filter" then
-                Print("Custom filter:\n" .. table.concat(self.saved.customFilter, ", "))
+                Print(zo_strformat("Custom filter:\n<<1>>", table.concat(self.saved.customFilter, ", ")))
             elseif command == "cyrillic" then
                 self.saved.cleanCyrillic = not self.saved.cleanCyrillic
-                Print("Cyrillic filter:\t" .. self.saved.cleanCyrillic)
+                Print(zo_strformat("Cyrillic filter:\t<<1>>", self.saved.cleanCyrillic))
             elseif command == "german" then
                 self.saved.cleanGerman = not self.saved.cleanGerman
-                Print("German filter:\t" .. self.saved.cleanGerman)
+                Print(zo_strformat("German filter:\t<<1>>", self.saved.cleanGerman))
             elseif command == "french" then
                 self.saved.cleanFrench = not self.saved.cleanFrench
-                Print("French filter:\t" .. self.saved.cleanFrench)
+                Print(zo_strformat("French filter:\t<<1>>", self.saved.cleanFrench))
             elseif command == "slavic" then
                 self.saved.cleanSlavic = not self.saved.cleanSlavic
-                Print("Slavic filter:\t" .. self.saved.cleanSlavic)
+                Print(zo_strformat("Slavic filter:\t<<1>>", self.saved.cleanSlavic))
             elseif command == "custom" then
                 self.saved.cleanCustom = not self.saved.cleanCustom
-                Print("Custom filter:\t" .. self.saved.cleanCustom)
+                Print(zo_strformat("Custom filter:\t<<1>>", self.saved.cleanCustom))
             end
         end
     end
@@ -473,7 +485,7 @@ end
 
 --- Function to migrate saved variables without resetting them
 function CleanMyChat:Migrate()
-    --- Version is 1.0.0
+    -- Version is 1.0.0
     if not self.saved.lastVersion then
         self.saved.channel = {}
         for i, v in pairs(self.defaults.channel) do
@@ -503,20 +515,27 @@ function CleanMyChat:Migrate()
 end
 
 --- Initialize functions
+--- @return table CleanMyChat instance
 function CleanMyChat:Initialize()
     if LibDebugLogger then
         Log = LibDebugLogger(self.name)
     end
-    self.saved = ZO_SavedVars:NewAccountWide(self.name .. "_Settings", self.savedVersion, nil, self.defaults)
-    self:Migrate()
-    self:RegisterSettings()
-    self:RegisterCommands()
+
+    local CMC = setmetatable ({}, self)
+    local mt = getmetatable (CMC)
+    mt.__index = self
+
+    CMC.saved = ZO_SavedVars:NewAccountWide(CMC.name .. "_Settings", CMC.savedVersion, nil, CMC.defaults)
+    CMC:Migrate()
+    CMC:RegisterSettings()
+    CMC:RegisterCommands()
     if pChat then
-        self:RegisterPChat()
+        CMC:RegisterPChat()
     else
-        self:RegisterEvent()
+        CMC:RegisterEvent()
     end
-    return self
+
+    return CMC
 end
 
 --Register Loaded Callback

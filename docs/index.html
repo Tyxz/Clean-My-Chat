@@ -30,6 +30,7 @@
 <h2>Contents</h2>
 <ul>
 <li><a href="#Functions">Functions</a></li>
+<li><a href="#Local_Functions">Local Functions</a></li>
 </ul>
 
 
@@ -51,7 +52,7 @@
 <pre>
 Author:     Arne Rantzen (Tyx)
 Created:    <span class="number">2020</span>&ndash;<span class="number">02</span>&ndash;<span class="number">25</span>
-Updated:    <span class="number">2020</span>&ndash;<span class="number">02</span>&ndash;<span class="number">25</span>
+Updated:    <span class="number">2020</span>&ndash;<span class="number">03</span>&ndash;<span class="number">01</span>
 License:    GPL-<span class="number">3.0</span>
 </pre></p>
 <p>
@@ -69,12 +70,28 @@ License:    GPL-<span class="number">3.0</span>
 	<td class="summary">Test if message contains letters known to be common in German</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#IsFrench">IsFrench (message)</a></td>
+	<td class="summary">Test if message contains letters known to be common in French</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#IsSlavic">IsSlavic (message)</a></td>
+	<td class="summary">Test if message contains letters known to be common in Slavic</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#IsCustom">IsCustom (message)</a></td>
 	<td class="summary">Test if message contains letters previous defined in the custom filter</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#MessageNeedsToBeRemoved">MessageNeedsToBeRemoved (messageType, fromName, text, isFromCustomerService, fromDisplayName)</a></td>
+	<td class="summary">Will check a chat event formatter, if it should be removed based on the set filter</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#RegisterEvent">RegisterEvent ()</a></td>
 	<td class="summary">Register filter for chat event</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RegisterPChat">RegisterPChat ()</a></td>
+	<td class="summary">Register filter for pChat addon</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#RegisterSettings">RegisterSettings ()</a></td>
@@ -85,8 +102,27 @@ License:    GPL-<span class="number">3.0</span>
 	<td class="summary">Register slash commands</td>
 	</tr>
 	<tr>
+	<td class="name" nowrap><a href="#Migrate">Migrate ()</a></td>
+	<td class="summary">Function to migrate saved variables without resetting them</td>
+	</tr>
+	<tr>
 	<td class="name" nowrap><a href="#Initialize">Initialize ()</a></td>
 	<td class="summary">Initialize functions</td>
+	</tr>
+</table>
+<h2><a href="#Local_Functions">Local Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Debug">Debug (vararg)</a></td>
+	<td class="summary">Debug output to the console</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Print">Print (vararg)</a></td>
+	<td class="summary">Output to the console</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Warn">Warn (vararg)</a></td>
+	<td class="summary">Warning output to the console</td>
 	</tr>
 </table>
 
@@ -108,7 +144,7 @@ License:    GPL-<span class="number">3.0</span>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">message</span>
-         text to be filtered
+         string to be filtered
         </li>
     </ul>
 
@@ -128,7 +164,47 @@ License:    GPL-<span class="number">3.0</span>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">message</span>
-         text to be filtered
+         string to be filtered
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "IsFrench"></a>
+    <strong>IsFrench (message)</strong>
+    </dt>
+    <dd>
+    Test if message contains letters known to be common in French
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string to be filtered
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "IsSlavic"></a>
+    <strong>IsSlavic (message)</strong>
+    </dt>
+    <dd>
+    Test if message contains letters known to be common in Slavic
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string to be filtered
         </li>
     </ul>
 
@@ -148,10 +224,47 @@ License:    GPL-<span class="number">3.0</span>
     <h3>Parameters:</h3>
     <ul>
         <li><span class="parameter">message</span>
-         text to be filtered
+         string to be filtered
         </li>
     </ul>
 
+
+
+
+
+</dd>
+    <dt>
+    <a name = "MessageNeedsToBeRemoved"></a>
+    <strong>MessageNeedsToBeRemoved (messageType, fromName, text, isFromCustomerService, fromDisplayName)</strong>
+    </dt>
+    <dd>
+    Will check a chat event formatter, if it should be removed based on the set filter
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">messageType</span>
+         number channel
+        </li>
+        <li><span class="parameter">fromName</span>
+         string name of the account it is send from
+        </li>
+        <li><span class="parameter">text</span>
+         string message
+        </li>
+        <li><span class="parameter">isFromCustomerService</span>
+         boolean if the message is from a customer service agent
+        </li>
+        <li><span class="parameter">fromDisplayName</span>
+         string name of the character it is send from
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean if the message should be filtered out
+    </ol>
 
 
 
@@ -163,6 +276,20 @@ License:    GPL-<span class="number">3.0</span>
     </dt>
     <dd>
     Register filter for chat event
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RegisterPChat"></a>
+    <strong>RegisterPChat ()</strong>
+    </dt>
+    <dd>
+    Register filter for pChat addon
 
 
 
@@ -200,6 +327,20 @@ License:    GPL-<span class="number">3.0</span>
 
 </dd>
     <dt>
+    <a name = "Migrate"></a>
+    <strong>Migrate ()</strong>
+    </dt>
+    <dd>
+    Function to migrate saved variables without resetting them
+
+
+
+
+
+
+
+</dd>
+    <dt>
     <a name = "Initialize"></a>
     <strong>Initialize ()</strong>
     </dt>
@@ -207,6 +348,75 @@ License:    GPL-<span class="number">3.0</span>
     Initialize functions
 
 
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table CleanMyChat instance
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Local_Functions"></a>Local Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Debug"></a>
+    <strong>Debug (vararg)</strong>
+    </dt>
+    <dd>
+    Debug output to the console
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">vararg</span>
+         string variable parameters to be printed as a debug log
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Print"></a>
+    <strong>Print (vararg)</strong>
+    </dt>
+    <dd>
+    Output to the console
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">vararg</span>
+         string variable parameters to be printed as a log
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Warn"></a>
+    <strong>Warn (vararg)</strong>
+    </dt>
+    <dd>
+    Warning output to the console
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">vararg</span>
+         string variable parameters to be printed as a log
+        </li>
+    </ul>
 
 
 
@@ -220,7 +430,7 @@ License:    GPL-<span class="number">3.0</span>
 </div> <!-- id="main" -->
 <div id="about">
 <i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
-<i style="float:right;">Last updated 2020-02-25 20:20:38 </i>
+<i style="float:right;">Last updated 2020-03-01 18:59:12 </i>
 </div> <!-- id="about" -->
 </div> <!-- id="container" -->
 </body>
