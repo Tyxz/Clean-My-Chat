@@ -10,7 +10,7 @@ CleanMyChat = {
     author = "Tyx",
     name = "CleanMyChat",
     displayName = "Clean My Chat",
-    version = "1.2.0",
+    version = "1.1.1",
     savedVersion = 1,
     channelNames = {
         [CHAT_CHANNEL_SAY] = GetString(SI_CHAT_CHANNEL_NAME_SAY),
@@ -44,7 +44,7 @@ CleanMyChat = {
         debug = false,
         lastVersion = {
             major = 1,
-            minor = 2
+            minor = 1
         },
         statistic = {
             cyrillic = 0,
