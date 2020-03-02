@@ -51,6 +51,7 @@ stds.eso = {
         "pChat",
         "SLASH_COMMANDS",
         "ZO_ChatSystem",
+        "ZO_ChatSystem_AddEventHandler",
         "ZO_ChatSystem_GetEventHandlers",
         "ZO_GenerateCommaSeparatedList",
         "ZO_PreHook",

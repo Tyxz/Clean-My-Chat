@@ -10,7 +10,7 @@ CleanMyChat = {
     author = "Tyx",
     name = "CleanMyChat",
     displayName = "Clean My Chat",
-    version = "1.1.1",
+    version = "1.1.2",
     savedVersion = 1,
     channelNames = {
         [CHAT_CHANNEL_SAY] = GetString(SI_CHAT_CHANNEL_NAME_SAY),
@@ -42,10 +42,6 @@ CleanMyChat = {
     },
     defaults = {
         debug = false,
-        lastVersion = {
-            major = 1,
-            minor = 1
-        },
         statistic = {
             cyrillic = 0,
             german = 0,
@@ -110,7 +106,7 @@ local LAM = LibAddonMenu2
 local Log
 
 --- Debug output to the console
---- @param vararg string variable parameters to be printed as a debug log
+--- @param ... string variable parameters to be printed as a debug log
 local function Debug(...)
     if Log then
         Log:Debug(...)
@@ -120,7 +116,7 @@ local function Debug(...)
 end
 
 --- Output to the console
---- @param vararg string variable parameters to be printed as a log
+--- @param ... string variable parameters to be printed as a log
 local function Print(...)
     if Log then
         Log:Info(...)
@@ -130,7 +126,7 @@ local function Print(...)
 end
 
 --- Warning output to the console
---- @param vararg string variable parameters to be printed as a log
+--- @param ... string variable parameters to be printed as a log
 local function Warn(...)
     if Log then
         Log:Warn(...)
@@ -270,7 +266,7 @@ function CleanMyChat:RegisterEvent()
     end
 
     -- Disable the whisper flash because of insecure code error
-    ZO_ChatSystem.OnFormattedChatMessage = nil
+    -- ZO_ChatSystem.OnFormattedChatMessage = nil
 
     -- alternative: CHAT_ROUTER.registeredEventHandlers
     local ZO_EventHandlers = ZO_ChatSystem_GetEventHandlers()
@@ -278,9 +274,6 @@ function CleanMyChat:RegisterEvent()
     ZO_PreHook(ZO_EventHandlers, EVENT_CHAT_MESSAGE_CHANNEL, function(...)
         return self:MessageNeedsToBeRemoved(...)
     end)
-
-    EVENT_MANAGER:UnregisterForEvent("ChatRouter", EVENT_CHAT_MESSAGE_CHANNEL)
-    CHAT_ROUTER:AddEventFormatter(EVENT_CHAT_MESSAGE_CHANNEL, ZO_EventHandlers[EVENT_CHAT_MESSAGE_CHANNEL])
 end
 
 --- Register filter for pChat addon
@@ -500,18 +493,23 @@ function CleanMyChat:Migrate()
             minor = 0
         }
     end
-    local major, minor = string.match(self.version, "(%d+).(%d+).%d+")
-    major, minor = tonumber(major), tonumber(minor)
+    local currentVersion = self:GetVersion()
     local lastVersion = self.saved.lastVersion
-    if lastVersion.major < major or lastVersion.minor < minor then
+    if lastVersion.major < currentVersion.major or lastVersion.minor < currentVersion.minor then
         if self.saved.debug then
-            Debug(zo_strformat("Migrate from <<1>>.<<2>> to <<3>>", lastVersion.major, lastVersion.minor, self.version))
+            Debug(zo_strformat("Migrate from <<1>>.<<2>> to <<3>>",
+                    lastVersion.major, lastVersion.minor, self.version))
         end
     end
-    self.saved.lastVersion = {
-        major = major,
-        minor = minor
-    }
+    self.saved.lastVersion = currentVersion
+end
+
+--- Function to get the current version as a number table
+--- @return table current version as numbers
+function CleanMyChat:GetVersion()
+    local major, minor, patch = string.match(self.version, "(%d+).(%d+).(%d+)")
+    major, minor, patch = tonumber(major), tonumber(minor), tonumber(patch)
+    return { major = major, minor = minor, patch = patch }
 end
 
 --- Initialize functions
@@ -526,6 +524,7 @@ function CleanMyChat:Initialize()
     mt.__index = self
 
     CMC.saved = ZO_SavedVars:NewAccountWide(CMC.name .. "_Settings", CMC.savedVersion, nil, CMC.defaults)
+
     CMC:Migrate()
     CMC:RegisterSettings()
     CMC:RegisterCommands()
