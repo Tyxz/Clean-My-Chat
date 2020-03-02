@@ -116,7 +116,7 @@ describe("CleanMyChat", function()
             describe("Filter", function()
                 local function check(tText, tDisplayName)
                     tChannel = CHAT_CHANNEL_SAY
-                    local tResult = CMC:MessageNeedsToBeRemoved(tChannel, tFromName, tText, nil, tDisplayName)
+                    local tResult = CMC:MessageNeedsToBeRemoved(tChannel, tFromName, tText, false, tDisplayName)
                     return tResult
                 end
                 insulate("Cyrillic", function()
@@ -272,11 +272,9 @@ describe("CleanMyChat", function()
         it("should register esoui hook if pChat is not active", function()
             stub(_G, "ZO_PreHook")
             _G.pChat = nil
-            _G.ZO_ChatSystem.OnFormattedChatMessage = "Test"
             CleanMyChat:Initialize()
             assert.stub(_G.ZO_PreHook).was_called.with(match.is_ref(ZO_ChatSystem_GetEventHandlers()),
                     EVENT_CHAT_MESSAGE_CHANNEL, match.is_function())
-            assert.same(nil, ZO_ChatSystem.OnFormattedChatMessage)
         end)
         it("should register settings menu if LibAddonMenu is active", function()
             stub(_G.LibAddonMenu2, "RegisterAddonPanel")
@@ -302,7 +300,7 @@ describe("CleanMyChat", function()
             CMC:Migrate()
             assert.is.same(CleanMyChat.defaults.statistic, CMC.saved.statistic)
             assert.is.same(CleanMyChat.defaults.channel, CMC.saved.channel)
-            assert.is.same(CleanMyChat.defaults.lastVersion, CMC.saved.lastVersion)
+            assert.is.same(CleanMyChat:GetVersion(), CMC.saved.lastVersion)
         end)
     end)
 end)
