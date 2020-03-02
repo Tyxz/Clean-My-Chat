@@ -253,6 +253,69 @@ describe("CleanMyChat", function()
         end)
     end)
 
+    insulate("Commands", function()
+        insulate("LibAddonMenu", function()
+            setup(function()
+                _G.LibAddonMenu2 = {}
+                function _G.LibAddonMenu2:RegisterAddonPanel(_, _) end
+                function _G.LibAddonMenu2:RegisterOptionControls(_, _) end
+                function _G.LibAddonMenu2:OpenToPanel(_) end
+                stub(_G.LibAddonMenu2, "OpenToPanel")
+                require("Lib.CleanMyChat")
+            end)
+
+            it("should open Libaddonmenu if installed and no command given", function()
+                SLASH_COMMANDS["/cmc"]("")
+                assert.stub(LibAddonMenu2.OpenToPanel).was_called()
+            end)
+        end)
+        describe("without libaddonmenu", function()
+            local cmd, CMC
+            setup(function()
+                require("Lib.CleanMyChat")
+                CMC = CleanMyChat:Initialize()
+                cmd = SLASH_COMMANDS["/cmc"]
+            end)
+
+            it("should print settings if no command given", function()
+                cmd("")
+                assert.stub(_G.d).was_called()
+            end)
+            it("should print filter", function()
+                CMC.customFilter = {"test"}
+                cmd("filter")
+                assert.stub(_G.d).was_called()
+            end)
+            describe("toggle", function()
+                it("should toggle cyrillic", function()
+                    local tExpected = not CMC.saved.cleanCyrillic
+                    cmd("cyrillic")
+                    assert.same(tExpected, CMC.saved.cleanCyrillic)
+                end)
+                it("should toggle german", function()
+                    local tExpected = not CMC.saved.cleanGerman
+                    cmd("german")
+                    assert.same(tExpected, CMC.saved.cleanGerman)
+                end)
+                it("should toggle french", function()
+                    local tExpected = not CMC.saved.cleanFrench
+                    cmd("french")
+                    assert.same(tExpected, CMC.saved.cleanFrench)
+                end)
+                it("should toggle slavic", function()
+                    local tExpected = not CMC.saved.cleanSlavic
+                    cmd("slavic")
+                    assert.same(tExpected, CMC.saved.cleanSlavic)
+                end)
+                it("should toggle custom", function()
+                    local tExpected = not CMC.saved.cleanCustom
+                    cmd("custom")
+                    assert.same(tExpected, CMC.saved.cleanCustom)
+                end)
+            end)
+
+        end)
+    end)
 
     insulate("Register", function()
         setup(function()

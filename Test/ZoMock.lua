@@ -69,7 +69,10 @@ end
 
 _G.ZO_GenerateCommaSeparatedList = function(tbl)
     local str = ""
-    local n = table.getn(tbl)
+    local n -- because table.getn is apparently nil
+    for i, _ in ipairs(tbl) do
+        n = i
+    end
     for i, v in ipairs(tbl) do
         if i == 1 then
             str = v
