@@ -5,7 +5,6 @@
     Updated:    2020-02-25
     License:    GPL-3.0
 --------------------------------------------]]--
-
 _G.EVENT_ADD_ON_LOADED = 0
 
 _G.GetCVar = function(key)
@@ -29,12 +28,23 @@ end
 function _G.EVENT_MANAGER:UnregisterForUpdate(_)
 end
 
+local function Copy(obj)
+    if type(obj) == "table" then
+        local copy = {}
+        for k,v in pairs(obj) do
+            copy[k] = Copy(v)
+        end
+        return copy
+    end
+    return obj
+end
+
 _G.ZO_SavedVars = {}
 function _G.ZO_SavedVars:New(_, _, _, defaults)
-    return defaults
+    return Copy(defaults)
 end
 function _G.ZO_SavedVars:NewAccountWide(_, _, _, defaults)
-    return defaults
+    return Copy(defaults)
 end
 
 _G.d = function(...)
@@ -50,10 +60,9 @@ end
 
 _G.zo_strformat = function(str, ...)
     local out = str
-    local args = table.pack(...)
-    for i=1,args.n do
+    for i=1,select('#', ...) do
         local pattern = "<<".. tostring(i) .. ">>"
-        out = string.gsub(out, pattern, args[i])
+        out = string.gsub(out, pattern, tostring(select(i, ...)))
     end
     return out
 end

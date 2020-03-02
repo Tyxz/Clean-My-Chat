@@ -15,7 +15,7 @@
 ## Title: Clean My Chat
 ## Description: Filters out all messages containing unknown letters.
 ## Author: |c0080ffTyx|r
-## Version 1.1.1
+## Version 1.1.2
 ## APIVersion: 100030
 ## SavedVariables: CleanMyChat_Settings
 ## OptionalDependsOn: LibAddonMenu-2.0 LibFeedback LibDebugLogger pChat
