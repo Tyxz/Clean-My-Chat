@@ -1,0 +1,546 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Clean My Chat documentation</title>
+    <link rel="stylesheet" href="ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>Clean My Chat</h1>
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Local_Functions">Local Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><strong>CleanMyChat</strong></li>
+</ul>
+<h2>Topics</h2>
+<ul class="">
+  <li><a href="topics/README.md.html">README</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>CleanMyChat</code></h1>
+<p>Project:    Clean My Chat
+<pre>
+Author:     Arne Rantzen (Tyx)
+Created:    <span class="number">2020</span>&ndash;<span class="number">02</span>&ndash;<span class="number">25</span>
+Updated:    <span class="number">2020</span>&ndash;<span class="number">03</span>&ndash;<span class="number">03</span>
+License:    GPL-<span class="number">3.0</span>
+</pre></p>
+<p>
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#IsCyrillic">IsCyrillic (message)</a></td>
+	<td class="summary">Test if message contains letters known to be common in cyrillic languages</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#IsGerman">IsGerman (message)</a></td>
+	<td class="summary">Test if message contains letters known to be common in German</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#IsFrench">IsFrench (message)</a></td>
+	<td class="summary">Test if message contains letters known to be common in French</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#IsSlavic">IsSlavic (message)</a></td>
+	<td class="summary">Test if message contains letters known to be common in Slavic
+ since 1.1.0</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#IsNordic">IsNordic (message)</a></td>
+	<td class="summary">Test if message contains letters known to be common in Nordic
+ since 1.2.0</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#IsSpanish">IsSpanish (message)</a></td>
+	<td class="summary">Test if message contains letters known to be common in Spanish
+ since 1.2.0</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#IsCustom">IsCustom (message)</a></td>
+	<td class="summary">Test if message contains letters previous defined in the custom filter</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#MessageNeedsToBeRemoved">MessageNeedsToBeRemoved (messageType, fromName, text, isFromCustomerService, fromDisplayName)</a></td>
+	<td class="summary">Will check a chat event formatter, if it should be removed based on the set filter</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RegisterEvent">RegisterEvent ()</a></td>
+	<td class="summary">Register filter for chat event</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RegisterPChat">RegisterPChat ()</a></td>
+	<td class="summary">Register filter for pChat addon</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RegisterSettings">RegisterSettings ()</a></td>
+	<td class="summary">Create menu in LibAddonMenu2 settings if available</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#RegisterCommands">RegisterCommands ()</a></td>
+	<td class="summary">Register slash commands</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Migrate">Migrate ()</a></td>
+	<td class="summary">Function to migrate saved variables without resetting them</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#GetVersion">GetVersion ()</a></td>
+	<td class="summary">Function to get the current version as a number table</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Initialize">Initialize ()</a></td>
+	<td class="summary">Initialize functions</td>
+	</tr>
+</table>
+<h2><a href="#Local_Functions">Local Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#Debug">Debug (...)</a></td>
+	<td class="summary">Debug output to the console</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Print">Print (...)</a></td>
+	<td class="summary">Output to the console</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Warn">Warn (...)</a></td>
+	<td class="summary">Warning output to the console</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#Check">Check (message, characters)</a></td>
+	<td class="summary">Function to check a message for a pattern</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "IsCyrillic"></a>
+    <strong>IsCyrillic (message)</strong>
+    </dt>
+    <dd>
+    Test if message contains letters known to be common in cyrillic languages
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string to be filtered
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "IsGerman"></a>
+    <strong>IsGerman (message)</strong>
+    </dt>
+    <dd>
+    Test if message contains letters known to be common in German
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string to be filtered
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "IsFrench"></a>
+    <strong>IsFrench (message)</strong>
+    </dt>
+    <dd>
+    Test if message contains letters known to be common in French
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string to be filtered
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "IsSlavic"></a>
+    <strong>IsSlavic (message)</strong>
+    </dt>
+    <dd>
+    Test if message contains letters known to be common in Slavic
+ since 1.1.0
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string to be filtered
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "IsNordic"></a>
+    <strong>IsNordic (message)</strong>
+    </dt>
+    <dd>
+    Test if message contains letters known to be common in Nordic
+ since 1.2.0
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string to be filtered
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "IsSpanish"></a>
+    <strong>IsSpanish (message)</strong>
+    </dt>
+    <dd>
+    Test if message contains letters known to be common in Spanish
+ since 1.2.0
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string to be filtered
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "IsCustom"></a>
+    <strong>IsCustom (message)</strong>
+    </dt>
+    <dd>
+    Test if message contains letters previous defined in the custom filter
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string to be filtered
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "MessageNeedsToBeRemoved"></a>
+    <strong>MessageNeedsToBeRemoved (messageType, fromName, text, isFromCustomerService, fromDisplayName)</strong>
+    </dt>
+    <dd>
+    Will check a chat event formatter, if it should be removed based on the set filter
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">messageType</span>
+         number channel
+        </li>
+        <li><span class="parameter">fromName</span>
+         string name of the account it is send from
+        </li>
+        <li><span class="parameter">text</span>
+         string message
+        </li>
+        <li><span class="parameter">isFromCustomerService</span>
+         boolean if the message is from a customer service agent
+        </li>
+        <li><span class="parameter">fromDisplayName</span>
+         string name of the character it is send from
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean if the message should be filtered out
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RegisterEvent"></a>
+    <strong>RegisterEvent ()</strong>
+    </dt>
+    <dd>
+    Register filter for chat event
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RegisterPChat"></a>
+    <strong>RegisterPChat ()</strong>
+    </dt>
+    <dd>
+    Register filter for pChat addon
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RegisterSettings"></a>
+    <strong>RegisterSettings ()</strong>
+    </dt>
+    <dd>
+    Create menu in LibAddonMenu2 settings if available
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "RegisterCommands"></a>
+    <strong>RegisterCommands ()</strong>
+    </dt>
+    <dd>
+    Register slash commands
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Migrate"></a>
+    <strong>Migrate ()</strong>
+    </dt>
+    <dd>
+    Function to migrate saved variables without resetting them
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "GetVersion"></a>
+    <strong>GetVersion ()</strong>
+    </dt>
+    <dd>
+    Function to get the current version as a number table
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table current version as numbers
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Initialize"></a>
+    <strong>Initialize ()</strong>
+    </dt>
+    <dd>
+    Initialize functions
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        table CleanMyChat instance
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Local_Functions"></a>Local Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "Debug"></a>
+    <strong>Debug (...)</strong>
+    </dt>
+    <dd>
+    Debug output to the console
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         string variable parameters to be printed as a debug log
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Print"></a>
+    <strong>Print (...)</strong>
+    </dt>
+    <dd>
+    Output to the console
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         string variable parameters to be printed as a log
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Warn"></a>
+    <strong>Warn (...)</strong>
+    </dt>
+    <dd>
+    Warning output to the console
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+         string variable parameters to be printed as a log
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "Check"></a>
+    <strong>Check (message, characters)</strong>
+    </dt>
+    <dd>
+    Function to check a message for a pattern
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">message</span>
+         string text to be checked
+        </li>
+        <li><span class="parameter">characters</span>
+         table of characters as pattern
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        boolean if pattern was found in message
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+<i style="float:right;">Last updated 2020-03-03 21:06:00 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

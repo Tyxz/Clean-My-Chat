@@ -2,7 +2,7 @@
     Project:    Clean My Chat
     Author:     Arne Rantzen (Tyx)
     Created:    2020-02-25
-    Updated:    2020-03-01
+    Updated:    2020-03-03
     License:    GPL-3.0
 --------------------------------------------]]--
 
@@ -289,7 +289,7 @@ function CleanMyChat:MessageNeedsToBeRemoved(messageType, fromName, text, isFrom
     if self.saved.debug then
         Debug(tostring(message))
         if removeMessage then
-            Debug(zo_strformat(
+            Warn(zo_strformat(
                     "Found <<1>> characters in the message.\nIt will be removed if it was not from you.",
                     ZO_GenerateCommaSeparatedList(found)
                 )
@@ -357,7 +357,13 @@ function CleanMyChat:RegisterSettings()
         registerForDefaults = true,
         resetFunc = function()
             for k,v in pairs(self.defaults) do
-                self.saved[k] = v
+                if type(v) == "table" then
+                    for j, z in pairs(v) do
+                        self.saved[k][j] = z
+                    end
+                else
+                    self.saved[k] = v
+                end
             end
         end,
     }
@@ -386,7 +392,11 @@ function CleanMyChat:RegisterSettings()
                             table.insert(statistic, zo_strformat("<<1>> <<C:2>>", v, k))
                         end
                     end
-                    return zo_strformat("<<1>> messages blocked.", ZO_GenerateCommaSeparatedList(statistic))
+                    if statistic == {} then
+                        return ""
+                    else
+                        return zo_strformat("<<1>> messages blocked.", ZO_GenerateCommaSeparatedList(statistic))
+                    end
                 end
             },
             {
@@ -453,6 +463,7 @@ function CleanMyChat:RegisterSettings()
                             table.insert(self.saved.customFilter, i)
                         end
                     end
+                    CLEAN_MY_CHAT_PANEL:RefreshPanel()
                 end
             },
             {
