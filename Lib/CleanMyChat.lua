@@ -10,7 +10,7 @@ CleanMyChat = {
     author = "Tyx",
     name = "CleanMyChat",
     displayName = "Clean My Chat",
-    version = "1.1.3",
+    version = "1.2.0",
     savedVersion = 1,
     channelNames = {
         [CHAT_CHANNEL_SAY] = GetString(SI_CHAT_CHANNEL_NAME_SAY),
@@ -47,12 +47,16 @@ CleanMyChat = {
             german = 0,
             french = 0,
             slavic = 0,
+            nordic = 0,
+            spanish = 0,
             custom = 0,
         },
         cleanCyrillic = false,
         cleanGerman = false,
         cleanFrench = false,
         cleanSlavic = false,
+        cleanNordic = false,
+        cleanSpanish = false,
         cleanCustom = false,
         customFilter = {},
         filterChannel = true,
@@ -86,20 +90,36 @@ CleanMyChat = {
 }
 
 local alphabet = {
-    cyrillic = {
-        "Б", "б", "Г", "г", "Д", "д", "Ж", "ж", "З", "з", "И", "и", "Й", "й", "К", "к", "Л", "л", "Н", "н", "П",
-        "п", "У", "Ф", "ф", "Ц", "ц", "Ч", "ч", "Ш", "ш", "Щ", "щ", "Ъ", "ъ", "Ы", "ы", "Э", "э", "Ю", "ю", "Я",
-        "я"
+    tooltip = {
+        cyrillic = {
+            "б", "г", "д", "ж", "з", "и", "й", "к", "л", "н", "У", "ф", "ц", "ч", "ш", "щ", "ъ", "ы", "э", "ю", "я"
+        },
+        german = {
+            "ä", "ö", "ü", "ß"
+        },
+        french = {
+            "à", "â", "é", "ê", "ë", "ï", "î", "ô", "œ", "ù", "û", "ÿ"
+        },
+        slavic = {
+            "ł", "ą", "ć", "ś", "ę", "ż"
+        },
+        nordic = {
+            "ø", "å"
+        },
+        spanish = {
+            "á", "í", "ó", "ú", "ñ", "¿", "¡"
+        }
     },
-    german = {
-        "ä", "ö", "ü", "ß"
-    },
-    french = {
-        "é", "à", "ê", "â", "î"
-    },
-    slavic = {
-        "ł", "ą", "ć", "ś", "ę", "ż"
+    --[[ not implemented for now
+    regex = {
+        cyrillic    = "[бгджзийклнУфцчшщъыэюя]",
+        german      = "[äöüß]",
+        french      = "[àâéêëïîôœùûÿ]",
+        slavic      = "[łąćśęż]",
+        nordic      = "[øå]",
+        spanish     = "[áíóúñ¿¡]"
     }
+    ]]--
 }
 
 local LAM = LibAddonMenu2
@@ -138,35 +158,56 @@ local function Warn(...)
     end
 end
 
-local function Check(message, table)
-    for _, letter in ipairs(table) do
+--- Function to check a message for a pattern
+--- @param message string text to be checked
+--- @param characters table of characters as pattern
+--- @return boolean if pattern was found in message
+local function Check(message, characters)
+    for _, letter in ipairs(characters) do
         if string.find(string.lower(message), string.lower(letter)) then return true end
     end
     return false
+    -- Issue: string.find(string.lower("ö"), "[ж]") is not nil among others when testing
+    -- return string.find(string.lower(message), pattern) ~= nil
 end
 
 --- Test if message contains letters known to be common in cyrillic languages
 ---@param message string to be filtered
 function CleanMyChat.IsCyrillic(message)
-    return Check(message, alphabet.cyrillic)
+    return Check(message, alphabet.tooltip.cyrillic)
 end
 
 --- Test if message contains letters known to be common in German
 ---@param message string to be filtered
 function CleanMyChat.IsGerman(message)
-    return Check(message, alphabet.german)
+    return Check(message, alphabet.tooltip.german)
 end
 
 --- Test if message contains letters known to be common in French
 ---@param message string to be filtered
 function CleanMyChat.IsFrench(message)
-    return Check(message, alphabet.french)
+    return Check(message, alphabet.tooltip.french)
 end
 
 --- Test if message contains letters known to be common in Slavic
+--- since 1.1.0
 ---@param message string to be filtered
 function CleanMyChat.IsSlavic(message)
-    return Check(message, alphabet.slavic)
+    return Check(message, alphabet.tooltip.slavic)
+end
+
+--- Test if message contains letters known to be common in Nordic
+------ since 1.2.0
+---@param message string to be filtered
+function CleanMyChat.IsNordic(message)
+    return Check(message, alphabet.tooltip.nordic)
+end
+
+--- Test if message contains letters known to be common in Spanish
+------ since 1.2.0
+---@param message string to be filtered
+function CleanMyChat.IsSpanish(message)
+    return Check(message, alphabet.tooltip.spanish)
 end
 
 --- Test if message contains letters previous defined in the custom filter
@@ -208,9 +249,12 @@ function CleanMyChat:MessageNeedsToBeRemoved(messageType, fromName, text, isFrom
     local removeGermanMessage = self.saved.cleanGerman and self.IsGerman(message)
     local removeFrenchMessage = self.saved.cleanFrench and self.IsFrench(message)
     local removeSlavicMessage = self.saved.cleanSlavic and self.IsSlavic(message)
+    local removeNordicMessage = self.saved.cleanNordic and self.IsNordic(message)
+    local removeSpanishMessage = self.saved.cleanSpanish and self.IsSpanish(message)
     local removeCustomMessage = self.saved.cleanCustom and self:IsCustom(message)
-    local removeMessage = removeSlavicMessage or removeFrenchMessage or removeGermanMessage
-            or removeCyrillicMessage or removeCustomMessage
+    local removeMessage = removeCyrillicMessage or removeGermanMessage or removeFrenchMessage
+            or removeSlavicMessage or removeNordicMessage or removeSpanishMessage
+            or removeCustomMessage
 
     local found = {}
     if removeCyrillicMessage then
@@ -228,6 +272,14 @@ function CleanMyChat:MessageNeedsToBeRemoved(messageType, fromName, text, isFrom
     if removeSlavicMessage then
         self.saved.statistic.slavic = self.saved.statistic.slavic + 1
         table.insert(found, "Slavic")
+    end
+    if removeNordicMessage then
+        self.saved.statistic.nordic = self.saved.statistic.nordic + 1
+        table.insert(found, "Nordic")
+    end
+    if removeSpanishMessage then
+        self.saved.statistic.spanish = self.saved.statistic.spanish + 1
+        table.insert(found, "Spanish")
     end
     if removeCustomMessage then
         self.saved.statistic.custom = self.saved.statistic.custom + 1
@@ -269,7 +321,7 @@ function CleanMyChat:RegisterEvent()
     -- ZO_ChatSystem.OnFormattedChatMessage = nil
 
     -- alternative: CHAT_ROUTER.registeredEventHandlers
-    local ZO_EventHandlers = ZO_ChatSystem_GetEventHandlers()
+    local ZO_EventHandlers = CHAT_ROUTER:GetRegisteredMessageFormatters()
 
     ZO_PreHook(ZO_EventHandlers, EVENT_CHAT_MESSAGE_CHANNEL, function(...)
         return self:MessageNeedsToBeRemoved(...)
@@ -340,35 +392,50 @@ function CleanMyChat:RegisterSettings()
             {
                 type = "checkbox",
                 name = "Clean Cyrillic",
-                tooltip = table.concat(alphabet.cyrillic, ", "),
+                tooltip = ZO_GenerateCommaSeparatedList(alphabet.tooltip.cyrillic),
                 getFunc = function() return self.saved.cleanCyrillic end,
                 setFunc = function(value) self.saved.cleanCyrillic = value end
             },
             {
                 type = "checkbox",
-                name = "Clean German",
-                tooltip = table.concat(alphabet.german, ", "),
-                getFunc = function() return self.saved.cleanGerman end,
-                setFunc = function(value) self.saved.cleanGerman = value end
-            },
-            {
-                type = "checkbox",
                 name = "Clean French",
-                tooltip = table.concat(alphabet.french, ", "),
+                tooltip = ZO_GenerateCommaSeparatedList(alphabet.tooltip.french),
                 getFunc = function() return self.saved.cleanFrench end,
                 setFunc = function(value) self.saved.cleanFrench = value end
             },
             {
                 type = "checkbox",
+                name = "Clean German",
+                tooltip = ZO_GenerateCommaSeparatedList(alphabet.tooltip.german),
+                getFunc = function() return self.saved.cleanGerman end,
+                setFunc = function(value) self.saved.cleanGerman = value end
+            },
+            {
+                type = "checkbox",
+                name = "Clean Nordic",
+                tooltip = ZO_GenerateCommaSeparatedList(alphabet.tooltip.nordic),
+                getFunc = function() return self.saved.cleanNordic end,
+                setFunc = function(value) self.saved.cleanNordic = value end
+            },
+            {
+                type = "checkbox",
                 name = "Clean Slavic",
-                tooltip = table.concat(alphabet.slavic, ", "),
+                tooltip = ZO_GenerateCommaSeparatedList(alphabet.tooltip.slavic),
                 getFunc = function() return self.saved.cleanSlavic end,
                 setFunc = function(value) self.saved.cleanSlavic = value end
             },
             {
                 type = "checkbox",
+                name = "Clean Spanish",
+                tooltip = ZO_GenerateCommaSeparatedList(alphabet.tooltip.spanish),
+                getFunc = function() return self.saved.cleanSpanish end,
+                setFunc = function(value) self.saved.cleanSpanish = value end
+            },
+            {
+                type = "checkbox",
                 name = "Clean Custom",
-                disabled = function() return self.customFilter == {} end,
+                tooltip = ZO_GenerateCommaSeparatedList(self.saved.customFilter),
+                disabled = function() return self.saved.customFilter == {} end,
                 getFunc = function() return self.saved.cleanCustom end,
                 setFunc = function(value) self.saved.cleanCustom = value end
             },
@@ -406,7 +473,13 @@ function CleanMyChat:RegisterSettings()
                 name = "Debug",
                 getFunc = function() return self.saved.debug end,
                 setFunc = function(value)
-                    Debug(zo_strformat("Debug output: <<1>>",  value))
+                    local str
+                    if value then
+                        str = "enabled"
+                    else
+                        str = "disabled"
+                    end
+                    Debug(zo_strformat("Debug output <<1>>.",  str))
                     self.saved.debug = value
                 end
             },
@@ -468,6 +541,12 @@ function CleanMyChat:RegisterCommands()
             elseif command == "slavic" then
                 self.saved.cleanSlavic = not self.saved.cleanSlavic
                 Print(zo_strformat("Slavic filter:\t<<1>>", self.saved.cleanSlavic))
+            elseif command == "nordic" then
+                self.saved.cleanNordic = not self.saved.cleanNordic
+                Print(zo_strformat("Nordic filter:\t<<1>>", self.saved.cleanNordic))
+            elseif command == "spanish" then
+                self.saved.cleanSpanish = not self.saved.cleanSpanish
+                Print(zo_strformat("Spanish filter:\t<<1>>", self.saved.cleanSpanish))
             elseif command == "custom" then
                 self.saved.cleanCustom = not self.saved.cleanCustom
                 Print(zo_strformat("Custom filter:\t<<1>>", self.saved.cleanCustom))

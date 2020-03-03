@@ -89,12 +89,13 @@ _G.ZO_ChatSystem = {}
 
 _G.ZO_PreHook = function(_, _ ,_) end
 
+local eventHandlers = {}
 _G.CHAT_ROUTER = {
     registeredEventHandlers = {}
 }
 function _G.CHAT_ROUTER:AddEventFormatter(_, _) end
+function _G.CHAT_ROUTER:GetRegisteredMessageFormatters() return eventHandlers end
 
-local eventHandlers = {}
 _G.ZO_ChatSystem_GetEventHandlers = function() return eventHandlers end
 
 _G.SLASH_COMMANDS = {}
