@@ -498,22 +498,22 @@ function CleanMyChat:RegisterSettings()
         LAM:RegisterOptionControls(self.name, data)
 
         if LibFeedback then
-            local buttons =
+            local buttons = setmetatable(
             {
                 { panel.feedback, "Report an issue", false },
-            }
+            }, {__index = table})
             local worldName = GetWorldName()
             if worldName == "EU Megaserver" then
-                table.insert(buttons, { 0, "In-game Feedback", false })
-                table.insert(buttons, { 5000, "Small donation", true })
-                table.insert(buttons, { 50000, "Larger donation", true })
+                buttons:insert({ 0, "In-game Feedback", false })
+                buttons:insert({ 5000, "Small donation", true })
+                buttons:insert({ 50000, "Larger donation", true })
             end
-            table.insert(buttons, { panel.donation, "Real donation", false })
+            buttons:insert({ panel.donation, "Real donation", false })
             return LibFeedback:initializeFeedbackWindow(
                     self,
                     self.displayName,
                     CLEAN_MY_CHAT_PANEL,
-                    self.author,
+                    zo_strformat("@<<1>>", self.author),
                     {12 , CLEAN_MY_CHAT_PANEL, 12 , -20, 20}, -- Anchor
                     buttons,
                     "If you found a bug, have a request or a suggestion, or simply wish to donate,\n"
