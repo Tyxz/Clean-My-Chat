@@ -10,7 +10,7 @@ CleanMyChat = {
     author = "Tyx",
     name = "CleanMyChat",
     displayName = "Clean My Chat",
-    version = "1.1.2",
+    version = "1.1.3",
     savedVersion = 1,
     channelNames = {
         [CHAT_CHANNEL_SAY] = GetString(SI_CHAT_CHANNEL_NAME_SAY),
@@ -92,7 +92,7 @@ local alphabet = {
         "я"
     },
     german = {
-        "ä", "ö", "ü"
+        "ä", "ö", "ü", "ß"
     },
     french = {
         "é", "à", "ê", "â", "î"
