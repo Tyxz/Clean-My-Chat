@@ -371,14 +371,16 @@ function CleanMyChat:RegisterSettings()
     if LAM then
         CLEAN_MY_CHAT_PANEL = LAM:RegisterAddonPanel(self.name, panel)
 
-        local controls = {}
-        for i, _ in pairs(self.defaults.channel) do
-            table.insert(controls, {
-                type = "checkbox",
-                name = self.channelNames[i],
-                getFunc = function() return self.saved.channel[i] end,
-                setFunc = function(value) self.saved.channel[i] = value end
-            })
+        local controls = setmetatable({}, {__index = table})
+        for handler, name in pairs(self.channelNames) do
+            if handler ~=CHAT_CHANNEL_WHISPER_SENT then
+                controls:insert({
+                    type = "checkbox",
+                    name = name,
+                    getFunc = function() return self.saved.channel[handler] end,
+                    setFunc = function(value) self.saved.channel[handler] = value end
+                })
+            end
         end
 
         local data = {
@@ -386,17 +388,17 @@ function CleanMyChat:RegisterSettings()
                 type = "description",
                 name = "Statistic",
                 text = function()
-                    local statistic = {}
+                    local statistic = setmetatable({}, {__index = table})
                     for k,v in pairs(self.saved.statistic) do
                         if self.saved[zo_strformat("clean<<C:1>>", k)] then
-                            table.insert(statistic, zo_strformat("<<1>> <<C:2>>", v, k))
+                            statistic:insert(zo_strformat("<<1>> <<C:2>>", v, k))
                         end
                     end
-                    if statistic == {} then
-                        return ""
-                    else
-                        return zo_strformat("<<1>> messages blocked.", ZO_GenerateCommaSeparatedList(statistic))
+                    local str = ""
+                    if #statistic ~= 0 then
+                        str = " messages blocked."
                     end
+                    return zo_strformat("<<1>><<2>>", ZO_GenerateCommaSeparatedList(statistic), str)
                 end
             },
             {
@@ -538,29 +540,51 @@ function CleanMyChat:RegisterCommands()
                 end
             end
         else
+            local str = "enabled"
             if command == "filter" then
                 Print(zo_strformat("Custom filter:\n<<1>>", table.concat(self.saved.customFilter, ", ")))
             elseif command == "cyrillic" then
                 self.saved.cleanCyrillic = not self.saved.cleanCyrillic
-                Print(zo_strformat("Cyrillic filter:\t<<1>>", self.saved.cleanCyrillic))
+                if not self.saved.cleanCyrillic then
+                    str = "disabled"
+                end
+                Print(zo_strformat("Cyrillic filter is <<1>>.", str))
             elseif command == "german" then
                 self.saved.cleanGerman = not self.saved.cleanGerman
-                Print(zo_strformat("German filter:\t<<1>>", self.saved.cleanGerman))
+                if not self.saved.cleanGerman then
+                    str = "disabled"
+                end
+                Print(zo_strformat("German filter is <<1>>.", str))
             elseif command == "french" then
                 self.saved.cleanFrench = not self.saved.cleanFrench
-                Print(zo_strformat("French filter:\t<<1>>", self.saved.cleanFrench))
+                if not self.saved.cleanFrench then
+                    str = "disabled"
+                end
+                Print(zo_strformat("French filter is <<1>>.", str))
             elseif command == "slavic" then
                 self.saved.cleanSlavic = not self.saved.cleanSlavic
-                Print(zo_strformat("Slavic filter:\t<<1>>", self.saved.cleanSlavic))
+                if not self.saved.cleanSlavic then
+                    str = "disabled"
+                end
+                Print(zo_strformat("Slavic filter is <<1>>.", str))
             elseif command == "nordic" then
                 self.saved.cleanNordic = not self.saved.cleanNordic
-                Print(zo_strformat("Nordic filter:\t<<1>>", self.saved.cleanNordic))
+                if not self.saved.cleanNordic then
+                    str = "disabled"
+                end
+                Print(zo_strformat("Nordic filter is <<1>>.", str))
             elseif command == "spanish" then
                 self.saved.cleanSpanish = not self.saved.cleanSpanish
-                Print(zo_strformat("Spanish filter:\t<<1>>", self.saved.cleanSpanish))
+                if not self.saved.cleanSpanish then
+                    str = "disabled"
+                end
+                Print(zo_strformat("Spanish filter is <<1>>.", str))
             elseif command == "custom" then
                 self.saved.cleanCustom = not self.saved.cleanCustom
-                Print(zo_strformat("Custom filter:\t<<1>>", self.saved.cleanCustom))
+                if not self.saved.cleanCustom then
+                    str = "disabled"
+                end
+                Print(zo_strformat("Custom filter is <<1>>.", str))
             end
         end
     end

@@ -374,39 +374,53 @@ describe("CleanMyChat", function()
             end)
             describe("toggle", function()
                 it("should toggle cyrillic", function()
+                    CMC.saved.cleanCyrillic = false
                     local tExpected = not CMC.saved.cleanCyrillic
                     cmd("cyrillic")
                     assert.same(tExpected, CMC.saved.cleanCyrillic)
+                    assert.stub(d).was_called.with("Cyrillic filter is enabled.")
                 end)
                 it("should toggle german", function()
+                    CMC.saved.cleanGerman = false
                     local tExpected = not CMC.saved.cleanGerman
                     cmd("german")
                     assert.same(tExpected, CMC.saved.cleanGerman)
+                    assert.stub(d).was_called.with("German filter is enabled.")
                 end)
                 it("should toggle french", function()
+                    CMC.saved.cleanFrench = false
                     local tExpected = not CMC.saved.cleanFrench
                     cmd("french")
                     assert.same(tExpected, CMC.saved.cleanFrench)
+                    assert.stub(d).was_called.with("French filter is enabled.")
                 end)
                 it("should toggle slavic", function()
+                    CMC.saved.cleanSlavic = false
                     local tExpected = not CMC.saved.cleanSlavic
                     cmd("slavic")
                     assert.same(tExpected, CMC.saved.cleanSlavic)
+                    assert.stub(d).was_called.with("Slavic filter is enabled.")
                 end)
                 it("should toggle nordic", function()
+                    CMC.saved.cleanNordic = false
                     local tExpected = not CMC.saved.cleanNordic
                     cmd("nordic")
                     assert.same(tExpected, CMC.saved.cleanNordic)
+                    assert.stub(d).was_called.with("Nordic filter is enabled.")
                 end)
                 it("should toggle spanish", function()
+                    CMC.saved.cleanSpanish = false
                     local tExpected = not CMC.saved.cleanSpanish
                     cmd("spanish")
                     assert.same(tExpected, CMC.saved.cleanSpanish)
+                    assert.stub(d).was_called.with("Spanish filter is enabled.")
                 end)
                 it("should toggle custom", function()
+                    CMC.saved.cleanCustom = false
                     local tExpected = not CMC.saved.cleanCustom
                     cmd("custom")
                     assert.same(tExpected, CMC.saved.cleanCustom)
+                    assert.stub(d).was_called.with("Custom filter is enabled.")
                 end)
             end)
 
