@@ -1,10 +1,13 @@
---[[--------------------------------------------
-    Project:    Clock - Tamriel Standard Time
-    Author:     Arne Rantzen (Tyx)
-    Created:    2020-02-19
-    Updated:    2020-02-25
-    License:    GPL-3.0
---------------------------------------------]]--
+package.path = 'dev/esoui/?.lua;' .. package.path
+
+-- Copied from Baertrams eso api lua intellij for testing purpose.
+
+--- @param stringVariablePrefix string
+--- @param contextId number
+--- @return string stringValue
+function GetString(stringVariablePrefix,contextId) return "String" end
+
+-- Replacements of internal ESO functions for testing
 _G.EVENT_ADD_ON_LOADED = 0
 
 _G.GetCVar = function(key)
@@ -26,25 +29,6 @@ function _G.EVENT_MANAGER:RegisterForUpdate(_, _, func)
     func()
 end
 function _G.EVENT_MANAGER:UnregisterForUpdate(_)
-end
-
-local function Copy(obj)
-    if type(obj) == "table" then
-        local copy = {}
-        for k,v in pairs(obj) do
-            copy[k] = Copy(v)
-        end
-        return copy
-    end
-    return obj
-end
-
-_G.ZO_SavedVars = {}
-function _G.ZO_SavedVars:New(_, _, _, defaults)
-    return Copy(defaults)
-end
-function _G.ZO_SavedVars:NewAccountWide(_, _, _, defaults)
-    return Copy(defaults)
 end
 
 _G.d = function(...)
@@ -69,7 +53,10 @@ end
 
 _G.ZO_GenerateCommaSeparatedList = function(tbl)
     local str = ""
-    local n = table.getn(tbl)
+    local n -- because table.getn is apparently nil
+    for i, _ in ipairs(tbl) do
+        n = i
+    end
     for i, v in ipairs(tbl) do
         if i == 1 then
             str = v
@@ -86,12 +73,13 @@ _G.ZO_ChatSystem = {}
 
 _G.ZO_PreHook = function(_, _ ,_) end
 
+local eventHandlers = {}
 _G.CHAT_ROUTER = {
     registeredEventHandlers = {}
 }
 function _G.CHAT_ROUTER:AddEventFormatter(_, _) end
+function _G.CHAT_ROUTER:GetRegisteredMessageFormatters() return eventHandlers end
 
-local eventHandlers = {}
 _G.ZO_ChatSystem_GetEventHandlers = function() return eventHandlers end
 
 _G.SLASH_COMMANDS = {}

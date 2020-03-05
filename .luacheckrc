@@ -61,7 +61,7 @@ stds.eso = {
 }
 self = false
 exclude_files = {
-    "Test/ZOMock.lua",
+    "Test/ESOUI.lua",
 }
 include_files = {
     "Lib/**/*.lua",

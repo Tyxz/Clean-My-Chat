@@ -2,7 +2,7 @@ describe("CleanMyChat", function()
     local match
     setup(function()
         match = require("luassert.match")
-        require("Test.ZoMock")
+        require("Test.Lib.CleanMyChat")
         stub(_G, "d")
     end)
     insulate("Functions", function()
@@ -10,6 +10,8 @@ describe("CleanMyChat", function()
         local tGerman = "Hallo, könnten du aufhören?"
         local tFrench = "Bonjour, pouvez-vous vous arrêter?"
         local tSlavic = "Halo, możesz przestać?"
+        local tNordic = "Forhåbentlig kan du høre mig"
+        local tSpanish = "Hola, ¿podrías parar?"
         setup(function()
             require("Lib.CleanMyChat")
             stub(_G, "d")
@@ -75,6 +77,38 @@ describe("CleanMyChat", function()
             it("should filter return false if text contains no slavic letters", function()
                 local tMessage = "Hellö, is anybody here?"
                 local tResult = CleanMyChat.IsSlavic(tMessage)
+                assert.falsy(tResult)
+            end)
+        end)
+        describe("Nordic", function()
+            it("should filter return true if text is only nordic letters", function()
+                local tMessage = "ø å"
+                local tResult = CleanMyChat.IsNordic(tMessage)
+                assert.truthy(tResult)
+            end)
+            it("should filter return true if text contains nordic letters", function()
+                local tResult = CleanMyChat.IsNordic(tNordic)
+                assert.truthy(tResult)
+            end)
+            it("should filter return false if text contains no nordic letters", function()
+                local tMessage = "Hello, is anybody here?"
+                local tResult = CleanMyChat.IsNordic(tMessage)
+                assert.falsy(tResult)
+            end)
+        end)
+        describe("Spanish", function()
+            it("should filter return true if text is only spanish letters", function()
+                local tMessage = "áíóúñ¿¡"
+                local tResult = CleanMyChat.IsSpanish(tMessage)
+                assert.truthy(tResult)
+            end)
+            it("should filter return true if text contains spanish letters", function()
+                local tResult = CleanMyChat.IsSpanish(tSpanish)
+                assert.truthy(tResult)
+            end)
+            it("should filter return false if text contains no spanish letters", function()
+                local tMessage = "Hello, is anybody here?"
+                local tResult = CleanMyChat.IsSpanish(tMessage)
                 assert.falsy(tResult)
             end)
         end)
@@ -223,6 +257,58 @@ describe("CleanMyChat", function()
                         assert.truthy(tExpected, tResult)
                     end)
                 end)
+                insulate("Nordic", function()
+                    it("should filter nordic message if set to filter", function()
+                        CMC.saved.cleanNordic = true
+                        assert.truthy(check(tNordic, "Player"))
+                    end)
+                    it("should not filter nordic message if not set to filter", function()
+                        CMC.saved.cleanNordic = false
+                        assert.falsy(check(tNordic, "Player"))
+                    end)
+                    it("should not filter nordic message if set to filter but from player", function()
+                        CMC.saved.cleanNordic = true
+                        assert.falsy(check(tNordic, "Test"))
+                    end)
+                    it("should warn player if own message would be filtered", function()
+                        CMC.saved.cleanNordic = true
+                        assert.falsy(check(tNordic, "Test"))
+                        assert.stub(_G.d).was_called()
+                    end)
+                    it("should update the statistic if filtered", function()
+                        CMC.saved.cleanNordic = true
+                        local tExpected = CMC.saved.statistic.nordic + 1
+                        check(tNordic, "Player")
+                        local tResult = CMC.saved.statistic.nordic
+                        assert.truthy(tExpected, tResult)
+                    end)
+                end)
+                insulate("Spanish", function()
+                    it("should filter spanish message if set to filter", function()
+                        CMC.saved.cleanSpanish = true
+                        assert.truthy(check(tSpanish, "Player"))
+                    end)
+                    it("should not filter spanish message if not set to filter", function()
+                        CMC.saved.cleanSpanish = false
+                        assert.falsy(check(tSpanish, "Player"))
+                    end)
+                    it("should not filter spanish message if set to filter but from player", function()
+                        CMC.saved.cleanSpanish = true
+                        assert.falsy(check(tSpanish, "Test"))
+                    end)
+                    it("should warn player if own message would be filtered", function()
+                        CMC.saved.cleanSpanish = true
+                        assert.falsy(check(tSpanish, "Test"))
+                        assert.stub(_G.d).was_called()
+                    end)
+                    it("should update the statistic if filtered", function()
+                        CMC.saved.cleanSpanish = true
+                        local tExpected = CMC.saved.statistic.spanish + 1
+                        check(tSpanish, "Player")
+                        local tResult = CMC.saved.statistic.spanish
+                        assert.truthy(tExpected, tResult)
+                    end)
+                end)
                 insulate("Custom", function()
                     it("should filter custom message if set to filter", function()
                         CMC.saved.cleanCustom = true
@@ -253,6 +339,137 @@ describe("CleanMyChat", function()
         end)
     end)
 
+    insulate("Commands", function()
+        insulate("TableToString", function()
+            require("Lib.CleanMyChat")
+            it("should print table to a string", function()
+                local tTable = {
+                    [1] = true,
+                    [2] = 2,
+                    [3] = "Test"
+                }
+                local tExpect = " Test: true\n Test: 2\n Test: Test\n"
+                local tResult = CleanMyChat.TableToString(tTable)
+                assert.equal(tExpect, tResult)
+            end)
+            it("should print a deep table to a string", function()
+                local tTable = {
+                    {
+                        "Test"
+                    }
+                }
+                local tExpect = " Test:\n. Test: Test\n"
+                local tResult = CleanMyChat.TableToString(tTable)
+                assert.equal(tExpect, tResult)
+            end)
+        end)
+        insulate("LibAddonMenu", function()
+            setup(function()
+                _G.LibAddonMenu2 = {}
+                function _G.LibAddonMenu2:RegisterAddonPanel(_, _) end
+                function _G.LibAddonMenu2:RegisterOptionControls(_, _) end
+                function _G.LibAddonMenu2:OpenToPanel(_) end
+                stub(_G.LibAddonMenu2, "OpenToPanel")
+                require("Lib.CleanMyChat")
+            end)
+
+            it("should open Libaddonmenu if installed and no command given", function()
+                SLASH_COMMANDS["/cmc"]("")
+                assert.stub(LibAddonMenu2.OpenToPanel).was_called()
+            end)
+        end)
+        describe("without libaddonmenu", function()
+            local cmd, CMC
+            setup(function()
+                require("Lib.CleanMyChat")
+                CMC = CleanMyChat:Initialize()
+                cmd = SLASH_COMMANDS["/cmc"]
+            end)
+
+            it("should print settings if no command given", function()
+                cmd("")
+                assert.stub(_G.d).was_called()
+            end)
+            describe("filter", function()
+                it("should print filter if there are any", function()
+                    CMC.saved.customFilter = {"test"}
+                    cmd("filter")
+                    assert.stub(_G.d).was.called_with("Custom filter:\n\ttest.")
+                end)
+                it("should print message if there are none", function()
+                    CMC.saved.customFilter = {}
+                    cmd("filter")
+                    assert.stub(_G.d).was.called_with("No custom filter were found.")
+                end)
+            end)
+            describe("toggle", function()
+                it("should toggle channel", function()
+                    CMC.saved.filterChannel = false
+                    local tExpected = not CMC.saved.filterChannel
+                    cmd("channel")
+                    assert.same(tExpected, CMC.saved.filterChannel)
+                    assert.stub(d).was_called.with("Channel filter is enabled.")
+                end)
+                it("should toggle cyrillic", function()
+                    CMC.saved.cleanCyrillic = false
+                    local tExpected = not CMC.saved.cleanCyrillic
+                    cmd("cyrillic")
+                    assert.same(tExpected, CMC.saved.cleanCyrillic)
+                    assert.stub(d).was_called.with("Cyrillic filter is enabled.")
+                end)
+                it("should toggle german", function()
+                    CMC.saved.cleanGerman = false
+                    local tExpected = not CMC.saved.cleanGerman
+                    cmd("german")
+                    assert.same(tExpected, CMC.saved.cleanGerman)
+                    assert.stub(d).was_called.with("German filter is enabled.")
+                end)
+                it("should toggle french", function()
+                    CMC.saved.cleanFrench = false
+                    local tExpected = not CMC.saved.cleanFrench
+                    cmd("french")
+                    assert.same(tExpected, CMC.saved.cleanFrench)
+                    assert.stub(d).was_called.with("French filter is enabled.")
+                end)
+                it("should toggle slavic", function()
+                    CMC.saved.cleanSlavic = false
+                    local tExpected = not CMC.saved.cleanSlavic
+                    cmd("slavic")
+                    assert.same(tExpected, CMC.saved.cleanSlavic)
+                    assert.stub(d).was_called.with("Slavic filter is enabled.")
+                end)
+                it("should toggle nordic", function()
+                    CMC.saved.cleanNordic = false
+                    local tExpected = not CMC.saved.cleanNordic
+                    cmd("nordic")
+                    assert.same(tExpected, CMC.saved.cleanNordic)
+                    assert.stub(d).was_called.with("Nordic filter is enabled.")
+                end)
+                it("should toggle spanish", function()
+                    CMC.saved.cleanSpanish = false
+                    local tExpected = not CMC.saved.cleanSpanish
+                    cmd("spanish")
+                    assert.same(tExpected, CMC.saved.cleanSpanish)
+                    assert.stub(d).was_called.with("Spanish filter is enabled.")
+                end)
+                it("should toggle custom", function()
+                    CMC.saved.cleanCustom = false
+                    local tExpected = not CMC.saved.cleanCustom
+                    cmd("custom")
+                    assert.same(tExpected, CMC.saved.cleanCustom)
+                    assert.stub(d).was_called.with("Custom filter is enabled.")
+                end)
+                it("should toggle debug", function()
+                    CMC.saved.debug = false
+                    local tExpected = not CMC.saved.debug
+                    cmd("debug")
+                    assert.same(tExpected, CMC.saved.debug)
+                    assert.stub(d).was_called.with("Debug output is enabled.")
+                end)
+            end)
+
+        end)
+    end)
 
     insulate("Register", function()
         setup(function()
