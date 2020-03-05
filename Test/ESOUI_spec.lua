@@ -5,8 +5,8 @@
     Updated:    2020-02-19
     License:    GPL-3.0
 --------------------------------------------]]--
-describe("ZoMock", function()
-    require("Test.ZoMock")
+describe("ESOUI", function()
+    require("Test.ESOUI")
 
     insulate("Global functions", function()
         it("should return en as language", function()
@@ -38,19 +38,6 @@ describe("ZoMock", function()
             stub(EVENT_MANAGER, "UnregisterForEvent")
             EVENT_MANAGER:UnregisterForEvent(nil, EVENT_ADD_ON_LOADED)
             assert.stub(EVENT_MANAGER.UnregisterForEvent).was.called()
-        end)
-    end)
-
-    describe("ZO_SavedVars", function()
-        it("should return table if NewAccountWide was called", function()
-            local tTable = { test = "Test" }
-            local tResult = ZO_SavedVars:NewAccountWide(nil, nil, nil, tTable)
-            assert.same(tTable, tResult)
-        end)
-        it("should return table if New was called", function()
-            local tTable = { test = "Test" }
-            local tResult = ZO_SavedVars:New(nil, nil, nil, tTable)
-            assert.same(tTable, tResult)
         end)
     end)
 
