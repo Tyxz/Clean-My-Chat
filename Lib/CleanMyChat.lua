@@ -7,7 +7,7 @@
 --------------------------------------------]]--
 
 CleanMyChat = {
-    author = "Tyx",
+    author = "@Tyx",
     name = "CleanMyChat",
     displayName = "Clean My Chat",
     version = "1.2.0",
@@ -515,7 +515,7 @@ function CleanMyChat:RegisterSettings()
                     self,
                     self.displayName,
                     CLEAN_MY_CHAT_PANEL,
-                    zo_strformat("@<<1>>", self.author),
+                    self.author,
                     {12 , CLEAN_MY_CHAT_PANEL, 12 , -20, 20}, -- Anchor
                     buttons,
                     "If you found a bug, have a request or a suggestion, or simply wish to donate,\n"
