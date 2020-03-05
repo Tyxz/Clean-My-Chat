@@ -287,8 +287,8 @@ function CleanMyChat:MessageNeedsToBeRemoved(messageType, fromName, text, isFrom
     end
 
     if self.saved.debug then
-        Debug(tostring(message))
         if removeMessage then
+            Debug(tostring(message))
             Warn(zo_strformat(
                     "Found <<1>> characters in the message.\nIt will be removed if it was not from you.",
                     ZO_GenerateCommaSeparatedList(found)
