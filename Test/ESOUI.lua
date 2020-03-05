@@ -1,10 +1,13 @@
---[[--------------------------------------------
-    Project:    Clock - Tamriel Standard Time
-    Author:     Arne Rantzen (Tyx)
-    Created:    2020-02-19
-    Updated:    2020-02-25
-    License:    GPL-3.0
---------------------------------------------]]--
+package.path = 'dev/esoui/?.lua;' .. package.path
+
+-- Copied from Baertrams eso api lua intellij for testing purpose.
+
+--- @param stringVariablePrefix string
+--- @param contextId number
+--- @return string stringValue
+function GetString(stringVariablePrefix,contextId) return "String" end
+
+-- Replacements of internal ESO functions for testing
 _G.EVENT_ADD_ON_LOADED = 0
 
 _G.GetCVar = function(key)
@@ -26,25 +29,6 @@ function _G.EVENT_MANAGER:RegisterForUpdate(_, _, func)
     func()
 end
 function _G.EVENT_MANAGER:UnregisterForUpdate(_)
-end
-
-local function Copy(obj)
-    if type(obj) == "table" then
-        local copy = {}
-        for k,v in pairs(obj) do
-            copy[k] = Copy(v)
-        end
-        return copy
-    end
-    return obj
-end
-
-_G.ZO_SavedVars = {}
-function _G.ZO_SavedVars:New(_, _, _, defaults)
-    return Copy(defaults)
-end
-function _G.ZO_SavedVars:NewAccountWide(_, _, _, defaults)
-    return Copy(defaults)
 end
 
 _G.d = function(...)

@@ -525,6 +525,40 @@ function CleanMyChat:RegisterSettings()
     end
 end
 
+--- Funtion to convert a table into a string
+--- @param object any to be converted to string
+--- @param[opt] tabs number of seperators befor the object
+function CleanMyChat.TableToString(object, tabs)
+    if not tabs then tabs = 0 end
+    local out = ""
+    local sep = "."
+    if type(object) == 'table' then
+        for k,v in pairs(object) do
+            out = zo_strformat("<<1>><<2>> ", out, sep:rep(tabs))
+            if k ~= "version" then
+                if type(k) == "number" then
+                    k = CleanMyChat.channelNames[k]
+                end
+                if type(v) == "table" and next(v) then
+                    out = zo_strformat("<<1>><<2>>:\n<<3>>", out, k, CleanMyChat.TableToString(v, tabs + 1))
+                elseif type(v) ~= "table" then
+                    out = zo_strformat("<<1>><<2>>: <<3>>", out, k, CleanMyChat.TableToString(v))
+                end
+            end
+        end
+        return out
+    elseif type(object) == "boolean" then
+        if object then
+            out = "true"
+        else
+            out = "false"
+        end
+    else
+        out = tostring(object)
+    end
+    return zo_strformat("<<1>>\n", out)
+end
+
 --- Register slash commands
 function CleanMyChat:RegisterCommands()
     SLASH_COMMANDS["/cmc"] = function(...)
@@ -533,16 +567,23 @@ function CleanMyChat:RegisterCommands()
             if LAM then
                 LAM:OpenToPanel(CLEAN_MY_CHAT_PANEL)
             else
-                for k, v in pairs(self.saved) do
-                    if k ~= "customFilter" then
-                        Print(zo_strformat("<<1>>:\t<<2>>", k, v))
-                    end
-                end
+                Print(CleanMyChat.TableToString(getmetatable(self.saved).__index))
             end
         else
             local str = "enabled"
             if command == "filter" then
-                Print(zo_strformat("Custom filter:\n<<1>>", table.concat(self.saved.customFilter, ", ")))
+                if next(self.saved.customFilter) then
+                    Print(zo_strformat("Custom filter:\n\t<<1>>.",
+                        ZO_GenerateCommaSeparatedList(self.saved.customFilter)))
+                else
+                    Print("No custom filter were found.")
+                end
+            elseif command == "channel" then
+                self.saved.filterChannel = not self.saved.filterChannel
+                if not self.saved.filterChannel then
+                    str = "disabled"
+                end
+                Print(zo_strformat("Channel filter is <<1>>.", str))
             elseif command == "cyrillic" then
                 self.saved.cleanCyrillic = not self.saved.cleanCyrillic
                 if not self.saved.cleanCyrillic then
@@ -585,6 +626,12 @@ function CleanMyChat:RegisterCommands()
                     str = "disabled"
                 end
                 Print(zo_strformat("Custom filter is <<1>>.", str))
+            elseif command == "debug" then
+                self.saved.debug = not self.saved.debug
+                if not self.saved.debug then
+                    str = "disabled"
+                end
+                Print(zo_strformat("Debug output is <<1>>.", str))
             end
         end
     end

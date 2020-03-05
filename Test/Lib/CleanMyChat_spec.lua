@@ -2,7 +2,7 @@ describe("CleanMyChat", function()
     local match
     setup(function()
         match = require("luassert.match")
-        require("Test.ZoMock")
+        require("Test.Lib.CleanMyChat")
         stub(_G, "d")
     end)
     insulate("Functions", function()
@@ -340,6 +340,29 @@ describe("CleanMyChat", function()
     end)
 
     insulate("Commands", function()
+        insulate("TableToString", function()
+            require("Lib.CleanMyChat")
+            it("should print table to a string", function()
+                local tTable = {
+                    [1] = true,
+                    [2] = 2,
+                    [3] = "Test"
+                }
+                local tExpect = " Test: true\n Test: 2\n Test: Test\n"
+                local tResult = CleanMyChat.TableToString(tTable)
+                assert.equal(tExpect, tResult)
+            end)
+            it("should print a deep table to a string", function()
+                local tTable = {
+                    {
+                        "Test"
+                    }
+                }
+                local tExpect = " Test:\n. Test: Test\n"
+                local tResult = CleanMyChat.TableToString(tTable)
+                assert.equal(tExpect, tResult)
+            end)
+        end)
         insulate("LibAddonMenu", function()
             setup(function()
                 _G.LibAddonMenu2 = {}
@@ -367,12 +390,26 @@ describe("CleanMyChat", function()
                 cmd("")
                 assert.stub(_G.d).was_called()
             end)
-            it("should print filter", function()
-                CMC.customFilter = {"test"}
-                cmd("filter")
-                assert.stub(_G.d).was_called()
+            describe("filter", function()
+                it("should print filter if there are any", function()
+                    CMC.saved.customFilter = {"test"}
+                    cmd("filter")
+                    assert.stub(_G.d).was.called_with("Custom filter:\n\ttest.")
+                end)
+                it("should print message if there are none", function()
+                    CMC.saved.customFilter = {}
+                    cmd("filter")
+                    assert.stub(_G.d).was.called_with("No custom filter were found.")
+                end)
             end)
             describe("toggle", function()
+                it("should toggle channel", function()
+                    CMC.saved.filterChannel = false
+                    local tExpected = not CMC.saved.filterChannel
+                    cmd("channel")
+                    assert.same(tExpected, CMC.saved.filterChannel)
+                    assert.stub(d).was_called.with("Channel filter is enabled.")
+                end)
                 it("should toggle cyrillic", function()
                     CMC.saved.cleanCyrillic = false
                     local tExpected = not CMC.saved.cleanCyrillic
@@ -421,6 +458,13 @@ describe("CleanMyChat", function()
                     cmd("custom")
                     assert.same(tExpected, CMC.saved.cleanCustom)
                     assert.stub(d).was_called.with("Custom filter is enabled.")
+                end)
+                it("should toggle debug", function()
+                    CMC.saved.debug = false
+                    local tExpected = not CMC.saved.debug
+                    cmd("debug")
+                    assert.same(tExpected, CMC.saved.debug)
+                    assert.stub(d).was_called.with("Debug output is enabled.")
                 end)
             end)
 
