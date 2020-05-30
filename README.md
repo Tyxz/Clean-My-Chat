@@ -7,8 +7,8 @@
 
 |   |   |   |
 |---|---|---|
-| Version: | 1.2.0 | [![Documentation](https://img.shields.io/website?label=%7C&up_color=important&up_message=documentation&url=https%3A%2F%2Ftyxz.github.io%2FClean-My-Chat%2F)](https://tyxz.github.io/Clean-My-Chat/) |  
-| Build for game version: | 100030 | [![Download](https://img.shields.io/website?label=%7C&up_color=blue&up_message=download&url=http%3A%2F%2Fwww.esoui.com%2Fdownloads%2Finfo2544-CleanMyChat.html)](https://www.esoui.com/downloads/info2544-CleanMyChat.html) |
+| Version: | 1.2.1 | [![Documentation](https://img.shields.io/website?label=%7C&up_color=important&up_message=documentation&url=https%3A%2F%2Ftyxz.github.io%2FClean-My-Chat%2F)](https://tyxz.github.io/Clean-My-Chat/) |  
+| Build for game version: | 100031 | [![Download](https://img.shields.io/website?label=%7C&up_color=blue&up_message=download&url=http%3A%2F%2Fwww.esoui.com%2Fdownloads%2Finfo2544-CleanMyChat.html)](https://www.esoui.com/downloads/info2544-CleanMyChat.html) |
 
 A small addon for Elder Scrolls Online (no affiliation), to reduce messages in unknown languages from the chat window.
 
